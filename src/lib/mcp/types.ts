@@ -1,0 +1,132 @@
+export interface MCPServer {
+  id: string;
+  name: string;
+  description: string;
+  status: 'connected' | 'disconnected' | 'connecting' | 'error';
+  type: 'http' | 'stdio' | 'local';
+  config: MCPServerConfig;
+  capabilities?: string[];
+  lastConnected?: Date;
+  error?: string;
+}
+
+export interface MCPServerConfig {
+  // HTTP transport
+  url?: string;
+  auth?: {
+    type: 'oauth2.1' | 'bearer' | 'basic' | 'none';
+    token?: string;
+    clientId?: string;
+    clientSecret?: string;
+    scopes?: string[];
+  };
+  headers?: Record<string, string>;
+
+  // stdio transport
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+
+  // Local transport
+  path?: string;
+
+  // General settings
+  timeout?: number;
+  retryCount?: number;
+  keepAlive?: boolean;
+}
+
+export interface MCPResource {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  annotations?: Record<string, unknown>;
+}
+
+export interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: string;
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+}
+
+export interface MCPPrompt {
+  name: string;
+  description?: string;
+  arguments?: Array<{
+    name: string;
+    description?: string;
+    required?: boolean;
+  }>;
+}
+
+export interface MCPCapabilities {
+  resources?: {
+    subscribe?: boolean;
+    listChanged?: boolean;
+  };
+  tools?: {
+    listChanged?: boolean;
+  };
+  prompts?: {
+    listChanged?: boolean;
+  };
+  logging?: {
+    level?: string;
+  };
+}
+
+export interface MCPMessage {
+  jsonrpc: '2.0';
+  id?: string | number;
+  method?: string;
+  params?: unknown;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+}
+
+export interface MCPTransport {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  send(message: MCPMessage): Promise<void>;
+  onMessage(callback: (message: MCPMessage) => void): void;
+  onClose(callback: () => void): void;
+  onError(callback: (error: Error) => void): void;
+}
+
+export interface BansheeProviderConfig {
+  enabled: boolean;
+  port: number;
+  auth: {
+    type: 'oauth2.1' | 'apikey' | 'none';
+    oauth?: {
+      clientId: string;
+      clientSecret: string;
+      scopes: string[];
+      authUrl: string;
+      tokenUrl: string;
+    };
+    apiKey?: {
+      header: string;
+      keys: string[];
+    };
+  };
+  exposedResources: {
+    agentConfigs: boolean;
+    fileOperations: boolean;
+    systemCommands: boolean;
+    conversationHistory: boolean;
+  };
+  rateLimits: {
+    requestsPerMinute: number;
+    requestsPerHour: number;
+  };
+}

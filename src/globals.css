@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Theme - Ethereal Banshee */
+    --background: 40 20% 98%; /* Off white #FAFAF8 */
+    --foreground: 155 50% 10%; /* Deep forest green #0A2819 */
+    --card: 30 15% 97%; /* Slightly warm white */
+    --card-foreground: 155 50% 10%;
+    --popover: 40 20% 98%;
+    --popover-foreground: 155 50% 10%;
+    --primary: 160 65% 20%; /* Dark emerald green #0A4F3B */
+    --primary-foreground: 40 20% 98%;
+    --secondary: 30 10% 90%; /* Light creamy grey #E8E5E0 */
+    --secondary-foreground: 155 50% 10%;
+    --muted: 30 10% 90%;
+    --muted-foreground: 155 30% 35%;
+    --accent: 160 45% 35%; /* Emerald accent */
+    --accent-foreground: 40 20% 98%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 40 20% 98%;
+    --border: 30 10% 85%;
+    --input: 30 10% 92%;
+    --ring: 160 65% 25%;
+    --chart-1: 160 65% 35%;
+    --chart-2: 155 45% 40%;
+    --chart-3: 150 35% 45%;
+    --chart-4: 30 25% 70%;
+    --chart-5: 40 30% 75%;
+    --radius: 0.75rem;
+
+    /* Custom properties for gradients and effects */
+    --gradient-primary: linear-gradient(135deg, hsl(160 65% 20%), hsl(160 55% 30%));
+    --gradient-secondary: linear-gradient(135deg, hsl(30 10% 90%), hsl(30 5% 85%));
+    --shimmer: linear-gradient(
+      105deg,
+      transparent 40%,
+      hsla(160, 65%, 50%, 0.2) 50%,
+      transparent 60%
+    );
+  }
+
+  .dark {
+    /* Dark Theme - Ethereal Banshee */
+    --background: 20 10% 8%; /* Dark flat grey #1A1917 */
+    --foreground: 150 30% 92%; /* Soft mint #E8F5F0 */
+    --card: 20 8% 10%; /* Slightly lighter than background */
+    --card-foreground: 150 30% 92%;
+    --popover: 20 8% 10%;
+    --popover-foreground: 150 30% 92%;
+    --primary: 150 40% 80%; /* Pale light green #B8E4D0 */
+    --primary-foreground: 20 10% 8%;
+    --secondary: 15 5% 15%; /* Dark grey */
+    --secondary-foreground: 150 30% 92%;
+    --muted: 15 5% 15%;
+    --muted-foreground: 150 20% 65%;
+    --accent: 0 65% 35%; /* Pinstripe dark blood red #8B1A1A */
+    --accent-foreground: 150 30% 92%;
+    --destructive: 0 65% 35%;
+    --destructive-foreground: 150 30% 92%;
+    --border: 15 5% 20%;
+    --input: 15 5% 18%;
+    --ring: 150 40% 70%;
+    --chart-1: 150 40% 70%;
+    --chart-2: 155 35% 60%;
+    --chart-3: 160 30% 50%;
+    --chart-4: 0 50% 40%;
+    --chart-5: 15 20% 30%;
+
+    /* Custom properties for gradients and effects */
+    --gradient-primary: linear-gradient(135deg, hsl(150 40% 75%), hsl(150 35% 85%));
+    --gradient-secondary: linear-gradient(135deg, hsl(20 10% 5%), hsl(20 5% 12%));
+    --shimmer: linear-gradient(
+      105deg,
+      transparent 40%,
+      hsla(150, 40%, 80%, 0.15) 50%,
+      transparent 60%
+    );
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Tauri specific styles */
+.tauri-drag-region {
+  --webkit-app-region: drag;
+}
+
+.tauri-no-drag {
+  --webkit-app-region: no-drag;
+}
+
+/* Ethereal Banshee Effects */
+@layer components {
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .bg-gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: var(--shimmer);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Ethereal glow effects */
+  .glow-primary {
+    box-shadow: 0 0 20px hsla(160, 65%, 30%, 0.3), 0 0 40px hsla(160, 65%, 30%, 0.1);
+  }
+
+  .dark .glow-primary {
+    box-shadow: 0 0 20px hsla(150, 40%, 80%, 0.2), 0 0 40px hsla(150, 40%, 80%, 0.1);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px hsla(160, 45%, 35%, 0.3), 0 0 40px hsla(160, 45%, 35%, 0.1);
+  }
+
+  .dark .glow-accent {
+    box-shadow: 0 0 20px hsla(0, 65%, 35%, 0.3), 0 0 40px hsla(0, 65%, 35%, 0.1);
+  }
+
+  /* Translucent card effects */
+  .glass {
+    backdrop-filter: blur(10px);
+    background-color: hsla(var(--card), 0.8);
+  }
+
+  .dark .glass {
+    backdrop-filter: blur(10px);
+    background-color: hsla(var(--card), 0.6);
+  }
+
+  /* Ethereal borders */
+  .border-ethereal {
+    border: 1px solid hsla(var(--border), 0.5);
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+      linear-gradient(135deg, hsla(var(--primary), 0.5), hsla(var(--accent), 0.5)) border-box;
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .dark .hover-lift:hover {
+    box-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.3);
+  }
+
+  /* Pulse animation for active states */
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsla(var(--secondary), 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsla(var(--primary), 0.5);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsla(var(--primary), 0.7);
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
