@@ -42,14 +42,19 @@ export const OAUTH_CONFIGS: Record<string, OAuthProviderConfig> = {
     responseType: 'code',
   },
 
-  // Anthropic OAuth is primarily for Claude Code/Pro/Max subscriptions
-  // Not for general API access
+  // Anthropic OAuth for Claude Pro/Max subscription access
+  // Uses Claude Code client ID for subscription-based authentication
   anthropic: {
     authorizationUrl: 'https://console.anthropic.com/oauth/authorize',
     tokenUrl: 'https://console.anthropic.com/oauth/token',
     scopes: ['read', 'write'],
+    usePKCE: true, // Enhanced security for subscription flow
     responseType: 'code',
     clientId: '9d1c250a-e61b-44d9-88ed-5944d1962f5e', // Claude Code client ID
+    additionalParams: {
+      access_type: 'offline', // Request refresh token for long-term access
+      prompt: 'consent', // Always show consent screen for Pro/Max subscriptions
+    },
   },
 };
 
@@ -64,9 +69,10 @@ export function getOAuthConfig(providerId: string): OAuthProviderConfig | null {
  * Check if a provider supports OAuth for API access
  */
 export function supportsOAuthForAPI(providerId: string): boolean {
-  // Only Google and OpenRouter support OAuth for API access
-  // Others like OpenAI, Meta, and most providers use API keys
-  return ['google', 'openrouter'].includes(providerId);
+  // Google and OpenRouter support OAuth for API access
+  // Anthropic supports OAuth for Pro/Max subscription access
+  // Others like OpenAI, Meta, and most providers use API keys only
+  return ['google', 'openrouter', 'anthropic'].includes(providerId);
 }
 
 /**

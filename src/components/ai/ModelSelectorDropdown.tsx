@@ -55,12 +55,12 @@ export function ModelSelectorDropdown({ onModelSelect, className }: ModelSelecto
 
     // Group models by provider
     const grouped: Record<string, ModelConfig[]> = {};
-    availableModels.forEach((model) => {
+    for (const model of availableModels) {
       if (!grouped[model.provider]) {
         grouped[model.provider] = [];
       }
       grouped[model.provider]!.push(model);
-    });
+    }
     setGroupedModels(grouped);
 
     // Select default model

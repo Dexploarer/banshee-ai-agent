@@ -15,6 +15,11 @@ import {
   type OAuthResult,
 } from './oauth-config';
 import {
+  detectSubscriptionPlan,
+  createSubscriptionAuthConfig,
+  type SubscriptionPlan,
+} from './subscription';
+import {
   saveAuthConfig as saveSecureAuthConfig,
   getAuthConfig as getSecureAuthConfig,
   removeAuthConfig as removeSecureAuthConfig,
@@ -241,15 +246,40 @@ export class AuthenticationManager {
       // Exchange authorization code for access token
       const tokenResponse = await this.exchangeCodeForToken(flow, authCode);
 
-      // Store the authentication configuration
-      const authConfig: AuthConfig = {
-        method: 'oauth2',
-        credentials: {
-          access_token: tokenResponse.access_token,
-          refresh_token: tokenResponse.refresh_token,
-        },
-        expires_at: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
-      };
+      // Handle subscription authentication for Anthropic
+      let authConfig: AuthConfig;
+      if (flow.provider_id === 'anthropic') {
+        // Detect subscription plan for Anthropic OAuth
+        const subscriptionPlan = await detectSubscriptionPlan(tokenResponse.access_token);
+        if (subscriptionPlan) {
+          authConfig = createSubscriptionAuthConfig(
+            tokenResponse.access_token,
+            tokenResponse.refresh_token || '',
+            tokenResponse.expires_in || 3600,
+            subscriptionPlan
+          );
+        } else {
+          // Fallback to basic OAuth config if plan detection fails
+          authConfig = {
+            method: 'oauth2',
+            credentials: {
+              access_token: tokenResponse.access_token,
+              refresh_token: tokenResponse.refresh_token,
+            },
+            expires_at: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
+          };
+        }
+      } else {
+        // Standard OAuth configuration for other providers
+        authConfig = {
+          method: 'oauth2',
+          credentials: {
+            access_token: tokenResponse.access_token,
+            refresh_token: tokenResponse.refresh_token,
+          },
+          expires_at: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
+        };
+      }
 
       this.setAuthConfig(flow.provider_id, authConfig);
 
@@ -613,7 +643,7 @@ export function getAuthInstructions(providerId: string, authMethod: AuthMethod):
     },
     anthropic: {
       api_key: 'Get your API key from https://console.anthropic.com',
-      oauth2: 'OAuth 2.0 available for enterprise customers',
+      oauth2: 'Sign in with your Claude Pro or Max subscription. Requires active Pro ($20/mo) or Max ($100/$200/mo) plan.',
       bearer_token: 'Use your Anthropic API key as a bearer token',
       jwt: 'Not supported by Anthropic',
       mtls: 'Contact Anthropic Enterprise support',

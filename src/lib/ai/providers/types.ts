@@ -36,6 +36,15 @@ export interface AuthConfig {
   };
   expires_at?: number;
   metadata?: Record<string, unknown>;
+  subscription_info?: {
+    plan_type: 'pro' | 'max_5x' | 'max_20x';
+    plan_name: string;
+    usage_limits: {
+      five_hour_limit: number;
+      weekly_limit: number;
+      model_access: string[];
+    };
+  };
 }
 
 export interface ModelCapabilities {
@@ -129,11 +138,11 @@ export const CORE_PROVIDERS: ProviderConfig[] = [
     id: 'anthropic',
     name: 'anthropic',
     display_name: 'Anthropic',
-    description: 'Claude models optimized for safety and helpfulness',
+    description: 'Claude models optimized for safety and helpfulness. Use API key for Console access or OAuth for Pro/Max subscriptions.',
     package_name: '@ai-sdk/anthropic',
     homepage_url: 'https://anthropic.com',
     documentation_url: 'https://ai-sdk.dev/providers/ai-sdk-providers/anthropic',
-    auth_methods: ['api_key'], // OAuth is for Claude Code/Pro/Max subscriptions, not API access
+    auth_methods: ['api_key', 'oauth2'], // API key for Console, OAuth for Pro/Max subscriptions
     default_auth_method: 'api_key',
     is_enabled: true,
     is_community: false,

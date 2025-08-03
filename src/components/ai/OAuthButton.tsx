@@ -92,6 +92,8 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
         return 'Sign in with Google';
       case 'openrouter':
         return 'Connect OpenRouter';
+      case 'anthropic':
+        return 'Sign in with Subscription';
       default:
         return `Sign in with ${provider.provider.display_name}`;
     }

@@ -12,6 +12,8 @@ import { getNativeMCPIntegration } from './mcpNative';
 import { getAvailableTools } from './tools';
 import { getProviderManager } from './providers/manager';
 import { getAuthManager } from './providers/auth';
+import { isModelAccessible } from './providers/subscription';
+import { globalRateLimiter } from './providers/rate-limiting';
 import type { ModelConfig, ProviderConfig } from './providers/types';
 
 // Types for AI SDK compatibility
@@ -209,23 +211,33 @@ export class AIRuntime {
       throw new Error(`Provider ${this.provider} is not authenticated`);
     }
 
-    // Get authentication headers
-    const authHeaders = await this.authManager.getAuthHeaders(this.provider);
-
     // Get the authentication config to check if it's OAuth
     const authConfig = await this.authManager.getAuthConfig(this.provider);
     const isOAuth = authConfig?.method === 'oauth2';
 
+    // Check model access for subscription users
+    if (authConfig && !isModelAccessible(this.model, authConfig)) {
+      const planName = authConfig.subscription_info?.plan_name || 'your subscription';
+      throw new Error(
+        `Model ${this.model} is not accessible with ${planName}. Please upgrade your plan or select a different model.`
+      );
+    }
+
+    // Get authentication headers
+    const authHeaders = await this.authManager.getAuthHeaders(this.provider);
+
     switch (this.provider) {
       case 'anthropic':
-        // Anthropic SDK uses x-api-key header by default
+        // Handle both API key and OAuth subscription authentication
         if (isOAuth && authConfig?.credentials?.access_token) {
-          // OAuth tokens for Anthropic are mainly for Claude Code/Pro subscriptions
-          // The SDK doesn't directly support OAuth, so we'd need custom handling
-          console.warn(
-            'Anthropic OAuth tokens are for Claude Code/Pro subscriptions, not API access'
-          );
+          // Use OAuth token for Pro/Max subscription access
+          // The token is used directly as the API key (without "Bearer " prefix)
+          console.log('Using Anthropic OAuth token for Pro/Max subscription access');
+          return anthropic(this.model, {
+            apiKey: authConfig.credentials.access_token,
+          });
         }
+        // Default to API key authentication
         return anthropic(this.model);
 
       case 'openai':
@@ -277,6 +289,20 @@ export class AIRuntime {
       toolChoice?: 'auto' | 'none' | 'required' | { type: 'tool'; toolName: string };
     } = {}
   ) {
+    // Check rate limits for subscription users
+    const authConfig = await this.authManager.getAuthConfig(this.provider);
+    if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+      const rateLimitCheck = globalRateLimiter.canMakeRequest(
+        this.provider,
+        this.model,
+        authConfig
+      );
+      
+      if (!rateLimitCheck.allowed) {
+        throw new Error(`Rate limit exceeded: ${rateLimitCheck.reason}`);
+      }
+    }
+
     // Ensure tools are loaded
     await this.initializeTools();
 
@@ -305,6 +331,12 @@ export class AIRuntime {
       onFinish: (result) => {
         // Track usage
         this.trackUsage(result, startTime);
+        
+        // Record rate limit usage for subscription users
+        if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+          globalRateLimiter.recordUsage(this.provider, this.model);
+        }
+        
         options.onFinish?.(result);
       },
     });
@@ -321,6 +353,20 @@ export class AIRuntime {
       toolChoice?: 'auto' | 'none' | 'required' | { type: 'tool'; toolName: string };
     } = {}
   ) {
+    // Check rate limits for subscription users
+    const authConfig = await this.authManager.getAuthConfig(this.provider);
+    if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+      const rateLimitCheck = globalRateLimiter.canMakeRequest(
+        this.provider,
+        this.model,
+        authConfig
+      );
+      
+      if (!rateLimitCheck.allowed) {
+        throw new Error(`Rate limit exceeded: ${rateLimitCheck.reason}`);
+      }
+    }
+
     // Ensure tools are loaded
     await this.initializeTools();
 
@@ -339,6 +385,11 @@ export class AIRuntime {
 
     // Track usage
     this.trackUsage(result, startTime);
+
+    // Record rate limit usage for subscription users
+    if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+      globalRateLimiter.recordUsage(this.provider, this.model);
+    }
 
     return result;
   }
@@ -483,6 +534,28 @@ export class AIRuntime {
    */
   getTotalUsage(days = 30) {
     return this.providerManager.getTotalUsage(days);
+  }
+
+  /**
+   * Get rate limit status for subscription users
+   */
+  async getRateLimitStatus() {
+    const authConfig = await this.authManager.getAuthConfig(this.provider);
+    if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+      return globalRateLimiter.getRateLimitStatus(this.provider, this.model, authConfig);
+    }
+    return null;
+  }
+
+  /**
+   * Get usage summary for subscription users
+   */
+  async getUsageSummary(): Promise<string | null> {
+    const authConfig = await this.authManager.getAuthConfig(this.provider);
+    if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
+      return globalRateLimiter.getUsageSummary(this.provider, this.model, authConfig);
+    }
+    return null;
   }
 
   /**
