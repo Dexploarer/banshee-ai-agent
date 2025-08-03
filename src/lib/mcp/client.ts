@@ -1,15 +1,17 @@
 import { HTTPTransport } from './transport/http';
 import { LocalTransport } from './transport/local';
 import { StdioTransport } from './transport/stdio';
-import {
-  type MCPCapabilities,
-  type MCPMessage,
-  type MCPPrompt,
-  type MCPResource,
-  type MCPServer,
-  MCPServerConfig,
-  type MCPTool,
-  type MCPTransport,
+import type {
+  MCPCapabilities,
+  MCPMessage,
+  MCPPrompt,
+  MCPResource,
+  MCPServer,
+  MCPTool,
+  MCPTransport,
+  ResourceLinkContent,
+  TextContent,
+  ToolCallResult,
 } from './types';
 
 export class MCPClient {
@@ -63,13 +65,20 @@ export class MCPClient {
     return connection.listResources();
   }
 
-  async getResource(serverId: string, uri: string): Promise<string> {
+  async readResource(
+    serverId: string,
+    uri: string
+  ): Promise<{
+    contents: string;
+    mimeType?: string;
+    _meta?: Record<string, unknown>;
+  }> {
     const connection = this.servers.get(serverId);
     if (!connection) {
       throw new Error(`Server ${serverId} not connected`);
     }
 
-    return connection.getResource(uri);
+    return connection.readResource(uri);
   }
 
   async listTools(serverId: string): Promise<MCPTool[]> {
@@ -81,7 +90,7 @@ export class MCPClient {
     return connection.listTools();
   }
 
-  async callTool(serverId: string, toolName: string, args: unknown): Promise<unknown> {
+  async callTool(serverId: string, toolName: string, args: unknown): Promise<ToolCallResult> {
     const connection = this.servers.get(serverId);
     if (!connection) {
       throw new Error(`Server ${serverId} not connected`);
@@ -171,11 +180,13 @@ class MCPServerConnection {
       capabilities: MCPCapabilities;
       serverInfo: { name: string; version: string };
     }>('initialize', {
-      protocolVersion: '2024-11-05',
+      protocolVersion: '2025-06-18',
       capabilities: {
         resources: { subscribe: true },
         tools: {},
         prompts: {},
+        // New in 2025-06-18 specification
+        elicitation: { supported: true },
       },
       clientInfo: {
         name: 'Banshee',
@@ -196,9 +207,29 @@ class MCPServerConnection {
     return response.resources || [];
   }
 
-  async getResource(uri: string): Promise<string> {
-    const response = await this.sendRequest<{ contents: string }>('resources/read', { uri });
-    return response.contents || '';
+  async readResource(uri: string): Promise<{
+    contents: string;
+    mimeType?: string;
+    _meta?: Record<string, unknown>;
+  }> {
+    const response = await this.sendRequest<{
+      contents: string;
+      mimeType?: string;
+      _meta?: Record<string, unknown>;
+    }>('resources/read', { uri });
+
+    return {
+      contents: response.contents || '',
+      ...(response.mimeType && { mimeType: response.mimeType }),
+      _meta: {
+        protocolVersion: '2025-06-18',
+        timestamp: new Date().toISOString(),
+        resourceUri: uri,
+        serverId: this.server.id,
+        accessLevel: 'read',
+        ...response._meta,
+      },
+    };
   }
 
   async listTools(): Promise<MCPTool[]> {
@@ -206,12 +237,36 @@ class MCPServerConnection {
     return response.tools || [];
   }
 
-  async callTool(name: string, arguments_: unknown): Promise<unknown> {
-    const response = await this.sendRequest<{ content: unknown }>('tools/call', {
+  async callTool(name: string, arguments_: unknown): Promise<ToolCallResult> {
+    const response = await this.sendRequest<{
+      content: Array<TextContent | ResourceLinkContent>;
+      isError?: boolean;
+      _meta?: Record<string, unknown>;
+    }>('tools/call', {
       name,
       arguments: arguments_,
     });
-    return response.content;
+
+    // Enhanced tool call result with resource linking support
+    const result: ToolCallResult = {
+      content: response.content || [{ type: 'text', text: 'No content returned' }],
+      isError: response.isError || false,
+      _meta: {
+        protocolVersion: '2025-06-18',
+        timestamp: new Date().toISOString(),
+        toolName: name,
+        serverId: this.server.id,
+        // Add resource indicators for OAuth 2.1 compliance
+        resourceIndicators: response._meta?.resourceIndicators || [],
+        // Support for linked resources in tool results
+        linkedResources: response._meta?.linkedResources || [],
+        // Elicitation capability support
+        elicitationPrompts: response._meta?.elicitationPrompts || [],
+        ...response._meta,
+      },
+    };
+
+    return result;
   }
 
   async listPrompts(): Promise<MCPPrompt[]> {

@@ -59,7 +59,7 @@ const defaultSettings: Settings = {
   minimizeToTray: true,
 
   defaultProvider: 'openai',
-  defaultModel: undefined,
+  defaultModel: 'gpt-4',
   temperature: 0.7,
   maxTokens: 2048,
   streamResponses: true,

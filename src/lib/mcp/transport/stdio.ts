@@ -68,7 +68,7 @@ export class StdioTransport implements MCPTransport {
       } catch (error) {
         console.error('Failed to stop MCP process:', error);
       }
-      delete (this as any).processId;
+      (this as any).processId = undefined;
     }
     for (const callback of this.closeCallbacks) {
       callback();

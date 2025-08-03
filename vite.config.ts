@@ -5,6 +5,8 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  root: 'src',
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -29,5 +31,7 @@ export default defineConfig({
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
     // produce sourcemaps for debug builds
     sourcemap: !!process.env.TAURI_DEBUG,
+    outDir: '../dist',
+    emptyOutDir: true,
   },
 });

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <div id="test"></div>
+    <script>
+        console.log('Test page loaded');
+        document.getElementById('test').innerHTML = 'JavaScript is working!';
+        
+        // Try to load the main script
+        import('/main.tsx').then(() => {
+            console.log('Main module loaded successfully');
+        }).catch(err => {
+            console.error('Failed to load main module:', err);
+        });
+    </script>
+</body>
+</html>

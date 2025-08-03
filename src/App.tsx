@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { Toaster } from './components/ui/toast';
 import { initDatabase } from './lib/database';
+import { initializeOAuthListener } from './lib/ai/providers/oauth-handler';
 import { AgentsPortal } from './portals/agents/AgentsPortal';
 import { ChatPortal } from './portals/chat/ChatPortal';
 import { DashboardPortal } from './portals/dashboard/DashboardPortal';
@@ -23,20 +24,53 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log('App component rendering');
+
   const theme = useThemeStore((state) => state.theme);
   const systemTheme = useThemeStore((state) => state.systemTheme);
 
   useEffect(() => {
-    // Initialize database
-    initDatabase().catch(console.error);
+    console.log('App useEffect running');
+
+    // Initialize database with error handling
+    initDatabase()
+      .then(() => {
+        console.log('Database initialized successfully');
+      })
+      .catch((error) => {
+        console.error('Database init error:', error);
+        // Don't let database errors prevent app from loading
+      });
+
+    // Initialize OAuth listener
+    const unlistenOAuth = initializeOAuthListener()
+      .then((unlisten) => {
+        console.log('OAuth listener initialized');
+        return unlisten;
+      })
+      .catch((error) => {
+        console.error('OAuth listener init error:', error);
+        return null;
+      });
 
     // Initialize theme on mount
     const effectiveTheme = theme === 'system' ? systemTheme : theme;
+    console.log('Theme:', theme, 'System theme:', systemTheme, 'Effective:', effectiveTheme);
+
     if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Cleanup function
+    return () => {
+      unlistenOAuth.then((unlisten) => {
+        if (unlisten) {
+          unlisten();
+        }
+      });
+    };
   }, [theme, systemTheme]);
 
   return (

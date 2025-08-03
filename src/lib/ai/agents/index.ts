@@ -43,7 +43,7 @@ export const agentConfigs: Record<string, AgentConfig> = {
     modelId: 'claude-3-5-sonnet',
     systemPrompt:
       'You are a software development assistant. Help with coding, debugging, and project management.',
-    tools: 'all',
+    tools: ['readFile', 'writeFile', 'listFiles', 'executeCommand'],
     maxSteps: 25,
   },
 };
@@ -65,7 +65,7 @@ export class Agent {
   async chat(message: string): Promise<string> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.generateResponse(this.conversation);
+    const result = await this.runtime.generateResponse(this.conversation as any);
 
     this.conversation.push({ role: 'assistant', content: result.text });
 
@@ -75,11 +75,11 @@ export class Agent {
   async chatStream(message: string): Promise<ReadableStream<string>> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.streamResponse(this.conversation);
+    const result = await this.runtime.streamResponse(this.conversation as any);
 
     // Update conversation when streaming finishes
-    result.onFinish.then(({ text }) => {
-      this.conversation.push({ role: 'assistant', content: text });
+    result.onFinish.then((r: any) => {
+      this.conversation.push({ role: 'assistant', content: r.text });
     });
 
     return result.stream;
@@ -106,13 +106,13 @@ export class Agent {
     if (steps && pattern === 'sequential') {
       const tasks = steps.map((step) => ({ prompt: step }));
       const results = await this.runtime.sequential(tasks);
-      return results.map((r) => r.text).join('\n\n');
+      return results.map((r: any) => r.text).join('\n\n');
     }
 
     if (steps && pattern === 'parallel') {
       const tasks = steps.map((step) => ({ prompt: step }));
       const results = await this.runtime.parallel(tasks);
-      return results.map((r) => r.text).join('\n\n');
+      return results.map((r: any) => r.text).join('\n\n');
     }
 
     // Single task execution

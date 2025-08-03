@@ -2,13 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { saveConversation, saveMessage } from '@/lib/database';
 import { getMessages } from '@/lib/database';
-import { useAgentStore } from '@/store/agentStore';
 import { cn } from '@/lib/utils';
+import { sanitizeInput } from '@/lib/validation/schemas';
+import { useAgentStore } from '@/store/agentStore';
 import { Send, StopCircle, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StreamProgress } from './StreamProgress';
 import { StreamingMessage } from './StreamingMessage';
 import { TokenCounter } from './TokenCounter';
+import { ModelSelectorDropdown } from './ModelSelectorDropdown';
 
 interface Message {
   id: string;
@@ -48,7 +50,7 @@ export function ChatInterface({
     return session?.agent || null;
   });
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!conversationId) return;
 
     try {
@@ -68,7 +70,7 @@ export function ChatInterface({
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
-  };
+  }, [conversationId]);
 
   // Load conversation messages when conversationId changes
   useEffect(() => {
@@ -78,12 +80,12 @@ export function ChatInterface({
       setMessages([]);
       setTotalTokens(0);
     }
-  }, [conversationId]);
+  }, [conversationId, loadMessages]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, isStreaming]);
+  }, [messages.length]);
 
   // Auto-resize textarea
   const resizeTextarea = () => {
@@ -93,91 +95,101 @@ export function ChatInterface({
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isStreaming) return;
+  const validateInput = (input: string): boolean => {
+    if (input.length > 10000) {
+      console.error('Message too long');
+      return false;
+    }
+    return true;
+  };
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
+  const createUserMessage = (content: string): Message => ({
+    id: crypto.randomUUID(),
+    role: 'user',
+    content,
+    timestamp: new Date(),
+    tokens: Math.ceil(content.length / 4),
+  });
+
+  const saveUserMessage = async (message: Message) => {
+    if (!conversationId) return;
+    await saveMessage({
+      conversation_id: conversationId,
       role: 'user',
-      content: input.trim(),
-      timestamp: new Date(),
-      tokens: Math.ceil(input.length / 4), // Rough estimate
-    };
+      content: message.content,
+      tokens: message.tokens || 0,
+    });
+  };
 
+  const simulateStreaming = async (): Promise<string> => {
+    const simulatedResponse =
+      "I understand you're looking for help with your Banshee AI assistant. The ethereal theme you've implemented creates a beautiful, otherworldly aesthetic that perfectly captures the essence of a 'Banshee' - mysterious and elegant.\n\nThe color scheme with dark emerald greens and shimmering gradients in light mode, contrasted with the pale greens and blood red accents in dark mode, creates a unique visual identity that sets this application apart.\n\nIs there something specific you'd like to enhance or modify about the current implementation?";
+
+    let accumulatedContent = '';
+    for (let i = 0; i < simulatedResponse.length; i++) {
+      if (abortControllerRef.current?.signal.aborted) break;
+      accumulatedContent += simulatedResponse[i];
+      setCurrentStreamContent(accumulatedContent);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    return accumulatedContent;
+  };
+
+  const saveAssistantResponse = async (userMessage: Message, assistantMessage: Message) => {
+    if (!conversationId) return;
+
+    await saveMessage({
+      conversation_id: conversationId,
+      role: 'assistant',
+      content: assistantMessage.content,
+      tokens: assistantMessage.tokens || 0,
+    });
+
+    const originalMessages = await getMessages(conversationId);
+    const title = originalMessages.length === 0 ? userMessage.content.slice(0, 50) : 'Conversation';
+
+    await saveConversation({
+      id: conversationId,
+      agent_id: agentId,
+      title,
+      token_count: totalTokens + (userMessage.tokens || 0) + (assistantMessage.tokens || 0),
+    });
+
+    onConversationUpdate?.();
+  };
+
+  const handleSend = async () => {
+    const sanitizedInput = sanitizeInput(input);
+    if (!sanitizedInput || isStreaming || !conversationId) return;
+    if (!validateInput(sanitizedInput)) return;
+
+    const userMessage = createUserMessage(sanitizedInput);
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsStreaming(true);
     setStreamStatus('connecting');
     setCurrentStreamContent('');
 
-    // Save user message to database
-    if (conversationId) {
-      await saveMessage({
-        conversation_id: conversationId,
-        role: 'user',
-        content: userMessage.content,
-        tokens: userMessage.tokens || 0,
-      });
-    }
+    await saveUserMessage(userMessage);
 
     try {
       abortControllerRef.current = new AbortController();
-
-      // TODO: Integrate with actual AI streaming endpoint
-      // For now, simulate streaming response
       setStreamStatus('streaming');
 
-      const simulatedResponse =
-        "I understand you're looking for help with your Banshee AI assistant. The ethereal theme you've implemented creates a beautiful, otherworldly aesthetic that perfectly captures the essence of a 'Banshee' - mysterious and elegant.\n\nThe color scheme with dark emerald greens and shimmering gradients in light mode, contrasted with the pale greens and blood red accents in dark mode, creates a unique visual identity that sets this application apart.\n\nIs there something specific you'd like to enhance or modify about the current implementation?";
-
-      let accumulatedContent = '';
-      for (let i = 0; i < simulatedResponse.length; i++) {
-        if (abortControllerRef.current.signal.aborted) {
-          break;
-        }
-
-        accumulatedContent += simulatedResponse[i];
-        setCurrentStreamContent(accumulatedContent);
-        await new Promise((resolve) => setTimeout(resolve, 20));
-      }
-
+      const content = await simulateStreaming();
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: accumulatedContent,
+        content,
         timestamp: new Date(),
-        tokens: Math.ceil(accumulatedContent.length / 4),
+        tokens: Math.ceil(content.length / 4),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamStatus('completed');
-
-      // Update total tokens
       setTotalTokens((prev) => prev + (userMessage.tokens || 0) + (assistantMessage.tokens || 0));
 
-      // Save assistant message to database
-      if (conversationId) {
-        await saveMessage({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: assistantMessage.content,
-          tokens: assistantMessage.tokens || 0,
-        });
-
-        // Update conversation token count
-        const originalMessages = await getMessages(conversationId);
-        const title = originalMessages.length === 0 ? userMessage.content.slice(0, 50) : 'Conversation';
-        
-        await saveConversation({
-          id: conversationId,
-          agent_id: agentId,
-          title,
-          token_count: totalTokens + (userMessage.tokens || 0) + (assistantMessage.tokens || 0),
-        });
-
-        // Notify parent of update
-        onConversationUpdate?.();
-      }
+      await saveAssistantResponse(userMessage, assistantMessage);
     } catch (error) {
       console.error('Error during streaming:', error);
       setStreamStatus('error');
@@ -209,21 +221,32 @@ export function ChatInterface({
   return (
     <Card className={cn('flex flex-col h-full glass', className)}>
       {/* Header */}
-      <div className="border-b p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gradient">
-            {selectedAgent?.name || 'Banshee AI'}
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClear}
-            disabled={messages.length === 0}
-            className="hover-lift"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Clear
-          </Button>
+      <div className="border-b p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gradient">
+              {selectedAgent?.name || 'Banshee AI'}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {messages.length} messages • {totalTokens.toLocaleString()} tokens
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <ModelSelectorDropdown
+              onModelSelect={(model) => {
+                console.log('Selected model:', model);
+              }}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              disabled={messages.length === 0}
+              className="hover-lift"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <TokenCounter current={totalTokens} max={128000} showCost className="text-xs" />
       </div>
@@ -270,6 +293,8 @@ export function ChatInterface({
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
             disabled={isStreaming}
+            aria-label="Message input"
+            aria-describedby="message-help"
             className={cn(
               'flex-1 resize-none rounded-lg border bg-background px-3 py-2',
               'focus:outline-none focus:ring-2 focus:ring-primary/50',
@@ -279,6 +304,9 @@ export function ChatInterface({
             )}
             rows={1}
           />
+          <span id="message-help" className="sr-only">
+            Press Enter to send, Shift+Enter for new line
+          </span>
           <Button
             onClick={isStreaming ? handleStop : handleSend}
             disabled={!input.trim() && !isStreaming}

@@ -42,8 +42,16 @@ export interface DbMcpSession {
 export async function initDatabase(): Promise<void> {
   if (db) return;
 
+  // Check if we're in Tauri environment
+  if (typeof window === 'undefined' || !('__TAURI__' in window)) {
+    console.warn('Not in Tauri environment, skipping database initialization');
+    return;
+  }
+
   try {
+    console.log('Loading database...');
     db = await Database.load('sqlite:banshee.db');
+    console.log('Database loaded successfully');
 
     // Create tables
     await db.execute(`
@@ -97,17 +105,17 @@ export async function initDatabase(): Promise<void> {
 
     // Create indexes
     await db.execute(
-      `CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);`
+      'CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);'
     );
-    await db.execute(`CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);`);
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);');
     await db.execute(
-      `CREATE INDEX IF NOT EXISTS idx_conversations_agent_id ON conversations(agent_id);`
-    );
-    await db.execute(
-      `CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at);`
+      'CREATE INDEX IF NOT EXISTS idx_conversations_agent_id ON conversations(agent_id);'
     );
     await db.execute(
-      `CREATE INDEX IF NOT EXISTS idx_mcp_sessions_server_id ON mcp_sessions(server_id);`
+      'CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at);'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_mcp_sessions_server_id ON mcp_sessions(server_id);'
     );
 
     console.log('Database initialized successfully');
@@ -170,8 +178,8 @@ export async function getConversations(agentId?: string, limit = 50): Promise<Db
   if (!db) throw new Error('Database not initialized');
 
   const query = agentId
-    ? `SELECT * FROM conversations WHERE agent_id = ? ORDER BY updated_at DESC LIMIT ?`
-    : `SELECT * FROM conversations ORDER BY updated_at DESC LIMIT ?`;
+    ? 'SELECT * FROM conversations WHERE agent_id = ? ORDER BY updated_at DESC LIMIT ?'
+    : 'SELECT * FROM conversations ORDER BY updated_at DESC LIMIT ?';
 
   const params = agentId ? [agentId, limit] : [limit];
   const result = await db.select<DbConversation[]>(query, params);
@@ -182,7 +190,7 @@ export async function getConversations(agentId?: string, limit = 50): Promise<Db
 export async function getConversation(id: string): Promise<DbConversation | null> {
   if (!db) throw new Error('Database not initialized');
 
-  const result = await db.select<DbConversation[]>(`SELECT * FROM conversations WHERE id = ?`, [
+  const result = await db.select<DbConversation[]>('SELECT * FROM conversations WHERE id = ?', [
     id,
   ]);
 
@@ -192,7 +200,7 @@ export async function getConversation(id: string): Promise<DbConversation | null
 export async function deleteConversation(conversationId: string): Promise<void> {
   if (!db) throw new Error('Database not initialized');
 
-  await db.execute(`DELETE FROM conversations WHERE id = ?`, [conversationId]);
+  await db.execute('DELETE FROM conversations WHERE id = ?', [conversationId]);
 }
 
 // Message operations
@@ -239,7 +247,7 @@ export async function getMessages(conversationId: string, limit = 100): Promise<
   if (!db) throw new Error('Database not initialized');
 
   const result = await db.select<DbMessage[]>(
-    `SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC LIMIT ?`,
+    'SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC LIMIT ?',
     [conversationId, limit]
   );
 
@@ -290,7 +298,7 @@ export async function getAgentSettings(agentId: string): Promise<DbAgentSettings
   if (!db) throw new Error('Database not initialized');
 
   const result = await db.select<DbAgentSettings[]>(
-    `SELECT * FROM agent_settings WHERE agent_id = ?`,
+    'SELECT * FROM agent_settings WHERE agent_id = ?',
     [agentId]
   );
 
@@ -327,13 +335,13 @@ export async function updateMcpSessionStatus(
   if (!db) throw new Error('Database not initialized');
 
   if (disconnected) {
-    await db.execute(`UPDATE mcp_sessions SET status = ?, disconnected_at = ? WHERE id = ?`, [
+    await db.execute('UPDATE mcp_sessions SET status = ?, disconnected_at = ? WHERE id = ?', [
       status,
       new Date().toISOString(),
       sessionId,
     ]);
   } else {
-    await db.execute(`UPDATE mcp_sessions SET status = ? WHERE id = ?`, [status, sessionId]);
+    await db.execute('UPDATE mcp_sessions SET status = ? WHERE id = ?', [status, sessionId]);
   }
 }
 
@@ -341,8 +349,8 @@ export async function getMcpSessions(serverId?: string, limit = 50): Promise<DbM
   if (!db) throw new Error('Database not initialized');
 
   const query = serverId
-    ? `SELECT * FROM mcp_sessions WHERE server_id = ? ORDER BY connected_at DESC LIMIT ?`
-    : `SELECT * FROM mcp_sessions ORDER BY connected_at DESC LIMIT ?`;
+    ? 'SELECT * FROM mcp_sessions WHERE server_id = ? ORDER BY connected_at DESC LIMIT ?'
+    : 'SELECT * FROM mcp_sessions ORDER BY connected_at DESC LIMIT ?';
 
   const params = serverId ? [serverId, limit] : [limit];
   const result = await db.select<DbMcpSession[]>(query, params);
@@ -359,10 +367,10 @@ export async function exportAllData(): Promise<{
 }> {
   if (!db) throw new Error('Database not initialized');
 
-  const conversations = await db.select<DbConversation[]>(`SELECT * FROM conversations`);
-  const messages = await db.select<DbMessage[]>(`SELECT * FROM messages`);
-  const agentSettings = await db.select<DbAgentSettings[]>(`SELECT * FROM agent_settings`);
-  const mcpSessions = await db.select<DbMcpSession[]>(`SELECT * FROM mcp_sessions`);
+  const conversations = await db.select<DbConversation[]>('SELECT * FROM conversations');
+  const messages = await db.select<DbMessage[]>('SELECT * FROM messages');
+  const agentSettings = await db.select<DbAgentSettings[]>('SELECT * FROM agent_settings');
+  const mcpSessions = await db.select<DbMcpSession[]>('SELECT * FROM mcp_sessions');
 
   return {
     conversations,
@@ -370,4 +378,46 @@ export async function exportAllData(): Promise<{
     agentSettings,
     mcpSessions,
   };
+}
+
+// Export conversation data
+export async function exportConversation(conversationId: string): Promise<any> {
+  if (!db) throw new Error('Database not initialized');
+
+  const conversation = await db.select<DbConversation[]>(
+    'SELECT * FROM conversations WHERE id = ?',
+    [conversationId]
+  );
+
+  if (!conversation || conversation.length === 0) {
+    throw new Error('Conversation not found');
+  }
+
+  const messages = await getMessages(conversationId);
+  const { getAgent } = await import('./ai/agents');
+  const agent = getAgent(conversation[0].agent_id);
+
+  return {
+    conversation: conversation[0],
+    messages,
+    agent,
+    exportedAt: new Date().toISOString(),
+    version: '1.0',
+  };
+}
+
+// Clear all application data
+export async function clearAllData(): Promise<void> {
+  if (!db) throw new Error('Database not initialized');
+
+  // Delete all data from tables
+  await db.execute('DELETE FROM messages');
+  await db.execute('DELETE FROM conversations');
+  await db.execute('DELETE FROM agent_settings');
+  await db.execute('DELETE FROM mcp_sessions');
+
+  // Reset autoincrement counters
+  await db.execute(
+    "DELETE FROM sqlite_sequence WHERE name IN ('messages', 'conversations', 'agent_settings', 'mcp_sessions')"
+  );
 }

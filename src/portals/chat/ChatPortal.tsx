@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { createConversation, deleteConversation, getConversations } from '@/lib/database';
 import type { DbConversation } from '@/lib/database';
-import { useAgentStore } from '@/store/agentStore';
 import { cn } from '@/lib/utils';
+import { useAgentStore } from '@/store/agentStore';
 import { Bot, MessageSquare, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -29,7 +29,10 @@ export function ChatPortal() {
 
     // Select the most recent conversation or create a new one
     if (convs.length > 0 && !selectedConversation) {
-      setSelectedConversation(convs[0]);
+      const firstConversation = convs[0];
+      if (firstConversation) {
+        setSelectedConversation(firstConversation);
+      }
     }
   };
 
@@ -50,7 +53,8 @@ export function ChatPortal() {
     await loadConversations();
 
     if (selectedConversation?.id === id) {
-      setSelectedConversation(conversations[0] || null);
+      const updatedConversations = conversations.filter((c) => c.id !== id);
+      setSelectedConversation(updatedConversations[0] ?? null);
     }
   };
 
@@ -62,13 +66,14 @@ export function ChatPortal() {
 
     if (diffDays === 0) {
       return 'Today';
-    } else if (diffDays === 1) {
-      return 'Yesterday';
-    } else if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    } else {
-      return date.toLocaleDateString();
     }
+    if (diffDays === 1) {
+      return 'Yesterday';
+    }
+    if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+    return date.toLocaleDateString();
   };
 
   if (!selectedAgent) {

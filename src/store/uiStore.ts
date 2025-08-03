@@ -3,9 +3,9 @@ import { create } from 'zustand';
 interface Toast {
   id: string;
   title: string;
-  description: string | undefined;
+  description: string;
   type: 'success' | 'error' | 'warning' | 'info';
-  duration: number | undefined;
+  duration: number;
 }
 
 interface UIState {
@@ -55,7 +55,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   sidebarOpen: true,
   currentPortal: 'dashboard',
   globalLoading: false,
-  loadingMessage: undefined,
+  loadingMessage: '',
   toasts: [],
   activeModal: null,
   modalData: null,
@@ -68,7 +68,8 @@ export const useUIStore = create<UIState>((set, get) => ({
   setCurrentPortal: (portal) => set({ currentPortal: portal }),
 
   // Loading actions
-  setGlobalLoading: (loading, message) => set({ globalLoading: loading, loadingMessage: message }),
+  setGlobalLoading: (loading, message) =>
+    set({ globalLoading: loading, loadingMessage: message || '' }),
 
   // Toast actions
   addToast: (toast) => {
@@ -103,15 +104,23 @@ export const useUIStore = create<UIState>((set, get) => ({
 // Helper functions for common toast patterns
 export const toast = {
   success: (title: string, description?: string) => {
-    useUIStore.getState().addToast({ title, description, type: 'success' });
+    useUIStore
+      .getState()
+      .addToast({ title, description: description || '', type: 'success', duration: 5000 });
   },
   error: (title: string, description?: string) => {
-    useUIStore.getState().addToast({ title, description, type: 'error' });
+    useUIStore
+      .getState()
+      .addToast({ title, description: description || '', type: 'error', duration: 8000 });
   },
   warning: (title: string, description?: string) => {
-    useUIStore.getState().addToast({ title, description, type: 'warning' });
+    useUIStore
+      .getState()
+      .addToast({ title, description: description || '', type: 'warning', duration: 6000 });
   },
   info: (title: string, description?: string) => {
-    useUIStore.getState().addToast({ title, description, type: 'info' });
+    useUIStore
+      .getState()
+      .addToast({ title, description: description || '', type: 'info', duration: 4000 });
   },
 };

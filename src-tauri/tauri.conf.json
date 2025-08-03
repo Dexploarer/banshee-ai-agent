@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.banshee.app",
   "build": {
-    "frontendDist": "../src"
+    "frontendDist": "../dist",
+    "beforeBuildCommand": "bun run vite build",
+    "beforeDevCommand": "bun run vite dev"
   },
   "app": {
     "withGlobalTauri": true,
@@ -18,11 +20,12 @@
         "center": true,
         "decorations": true,
         "transparent": false,
-        "resizable": true
+        "resizable": true,
+        "devtools": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss: ws:; font-src 'self' data:; object-src 'none'; base-uri 'self';"
     }
   },
   "bundle": {

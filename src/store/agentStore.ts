@@ -48,6 +48,9 @@ interface AgentState {
   getActiveSession: () => AgentSession | null;
   getSessionByAgent: (agentId: string) => AgentSession | undefined;
   getConversationsByAgent: (agentId: string) => Conversation[];
+
+  // Utility actions
+  clearActiveSession: () => void;
 }
 
 export const useAgentStore = create<AgentState>()(
@@ -82,7 +85,14 @@ export const useAgentStore = create<AgentState>()(
           sessions: {
             ...state.sessions,
             [agentId]: {
-              ...state.sessions[agentId],
+              ...(state.sessions[agentId] ?? {
+                agentId,
+                agent: null,
+                conversation: null,
+                isActive: false,
+                isLoading: false,
+                error: null,
+              }),
               ...updates,
             },
           },
@@ -136,7 +146,7 @@ export const useAgentStore = create<AgentState>()(
 
       loadConversation: (conversationId) => {
         const conversation = get().conversations.find((c) => c.id === conversationId);
-        if (conversation && conversation.agentId) {
+        if (conversation?.agentId) {
           const session = get().sessions[conversation.agentId];
           if (session) {
             set((state) => ({
@@ -161,7 +171,7 @@ export const useAgentStore = create<AgentState>()(
 
       getActiveSession: () => {
         const { selectedAgentId, sessions } = get();
-        return selectedAgentId ? sessions[selectedAgentId] : null;
+        return selectedAgentId ? (sessions[selectedAgentId] ?? null) : null;
       },
 
       getSessionByAgent: (agentId) => {
@@ -170,6 +180,28 @@ export const useAgentStore = create<AgentState>()(
 
       getConversationsByAgent: (agentId) => {
         return get().conversations.filter((c) => c.agentId === agentId);
+      },
+
+      clearActiveSession: () => {
+        const { selectedAgentId } = get();
+        if (selectedAgentId) {
+          set((state) => {
+            const currentSession = state.sessions[selectedAgentId];
+            if (!currentSession) return state;
+
+            return {
+              ...state,
+              sessions: {
+                ...state.sessions,
+                [selectedAgentId]: {
+                  ...currentSession,
+                  conversation: null,
+                  isActive: false,
+                },
+              },
+            };
+          });
+        }
       },
     }),
     {
@@ -181,4 +213,4 @@ export const useAgentStore = create<AgentState>()(
   )
 );
 
-export { useAgentStore };
+// Export the store hook

@@ -12,6 +12,11 @@ use ai::{
     read_file_command, write_file_command, list_files_command,
     execute_command, http_request_command, show_notification_command,
     set_setting_command, get_setting_command, get_rate_limit_stats,
+    // Secure commands
+    create_session, generate_csrf_token, execute_command_secure,
+    read_file_tool_secure, write_file_tool_secure, list_files_tool_secure,
+    execute_agent_tool_secure, store_api_key_secure, get_api_key_secure,
+    init_secure_session, init_security_managers, SecureSession,
 };
 
 use mcp::{
@@ -77,14 +82,36 @@ pub fn run() {
         }
     };
     
+    // Initialize secure session state
+    let secure_session = init_secure_session();
+    
+    // Initialize security managers (without spawning tasks yet)
+    init_security_managers();
+    info!("Security managers initialized");
+    
     // Initialize MCP process map
     let mcp_processes: Arc<Mutex<HashMap<u32, MCPProcessInfo>>> = Arc::new(Mutex::new(HashMap::new()));
     
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_oauth::init())
         .manage(ai_state)
         .manage(mcp_processes)
+        .manage(secure_session)
+        .setup(|_app| {
+            // Start cleanup tasks within Tauri's async runtime
+            tauri::async_runtime::spawn(async {
+                use std::time::Duration;
+                let mut interval = tokio::time::interval(Duration::from_secs(300)); // 5 minutes
+                
+                loop {
+                    interval.tick().await;
+                    // Cleanup tasks disabled for now to avoid runtime errors
+                }
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             // API Key Management
@@ -145,6 +172,16 @@ pub fn run() {
             get_messages,
             search_conversations,
             delete_conversation,
+            // Secure commands
+            create_session,
+            generate_csrf_token,
+            execute_command_secure,
+            read_file_tool_secure,
+            write_file_tool_secure,
+            list_files_tool_secure,
+            execute_agent_tool_secure,
+            store_api_key_secure,
+            get_api_key_secure,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

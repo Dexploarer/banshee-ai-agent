@@ -290,7 +290,7 @@ export class BansheeMCPServer {
     }
 
     return {
-      protocolVersion: '2024-11-05',
+      protocolVersion: '2025-06-18', // Updated to match latest MCP specification
       capabilities,
       serverInfo: {
         name: 'Banshee',

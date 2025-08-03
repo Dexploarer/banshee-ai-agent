@@ -32,11 +32,19 @@ export const agentConfigs: Agent[] = [
 ];
 
 export function createAssistant(): Agent {
-  return agentConfigs[0];
+  const agent = agentConfigs.find((a) => a.id === 'assistant');
+  if (!agent) throw new Error('Assistant agent not found');
+  return agent;
 }
 
 export function createDeveloper(): Agent {
-  return agentConfigs[1];
+  const agent = agentConfigs.find((a) => a.id === 'developer');
+  if (!agent) throw new Error('Developer agent not found');
+  return agent;
+}
+
+export function getAgent(agentId: string): Agent | undefined {
+  return agentConfigs.find((a) => a.id === agentId);
 }
 
 export function createFileManager(): Agent {
@@ -69,4 +77,4 @@ export function createWebAgent(): Agent {
   };
 }
 
-export { Agent };
+// Agent type is already exported above with the interface declaration

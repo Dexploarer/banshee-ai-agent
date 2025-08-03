@@ -36,6 +36,7 @@ export function MessageRenderer({ content, className }: MessageRendererProps) {
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
         components={{
           // Custom code block rendering
+          // biome-ignore lint/suspicious/noExplicitAny: React children type is complex for code elements
           pre({ children, ...props }) {
             const codeElement = children as any;
             const code = codeElement?.props?.children?.[0] || '';

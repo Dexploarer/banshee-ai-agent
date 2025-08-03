@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Minus, Square, X } from 'lucide-react';
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 export function TitleBar() {
   const handleMinimize = () => {
@@ -20,7 +22,9 @@ export function TitleBar() {
   return (
     <div className="flex h-8 items-center justify-between bg-card border-b tauri-drag-region">
       {/* App Title */}
-      <div className="flex items-center px-4">
+      <div className="flex items-center gap-2 px-4">
+        <img src={bansheeLogoTransparent} alt="Banshee Logo" className="h-4 w-4 dark:hidden" />
+        <img src={bansheeLogoWhite} alt="Banshee Logo" className="h-4 w-4 hidden dark:block" />
         <span className="text-sm font-medium text-foreground">Banshee</span>
       </div>
 

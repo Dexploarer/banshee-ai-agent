@@ -184,54 +184,124 @@ export class BansheeMCPHandler implements MCPServerHandler {
     arguments_: unknown
   ): Promise<{ content: unknown; isError?: boolean }> {
     try {
+      // Input validation
+      if (!name || typeof name !== 'string') {
+        throw new Error('Invalid tool name');
+      }
+
+      if (!arguments_ || typeof arguments_ !== 'object') {
+        throw new Error('Invalid tool arguments');
+      }
+
       const args = arguments_ as Record<string, unknown>;
+
+      // Validate string inputs to prevent injection
+      const validateString = (value: unknown, fieldName: string): string => {
+        if (typeof value !== 'string') {
+          throw new Error(`${fieldName} must be a string`);
+        }
+
+        // Basic sanitization - remove null bytes and control characters
+        const sanitized = value.replace(/[\x00-\x1f\x7f]/g, '');
+
+        if (sanitized.length > 10000) {
+          throw new Error(`${fieldName} too long`);
+        }
+
+        return sanitized;
+      };
 
       switch (name) {
         case 'execute_agent': {
-          const agentResult = await invoke('execute_agent_tool', {
-            agentType: args.agentType,
-            prompt: args.prompt,
+          const agentType = validateString(args.agentType, 'agentType');
+          const prompt = validateString(args.prompt, 'prompt');
+
+          // Whitelist allowed agent types
+          const allowedAgentTypes = [
+            'assistant',
+            'fileManager',
+            'webAgent',
+            'developer',
+            'systemAdmin',
+          ];
+          if (!allowedAgentTypes.includes(agentType)) {
+            throw new Error('Invalid agent type');
+          }
+
+          const agentResult = await invoke('execute_agent_tool_secure', {
+            agentType,
+            prompt,
             context: args.context || {},
           });
           return { content: agentResult };
         }
 
         case 'read_file': {
-          const fileContents = await invoke<string>('read_file_tool', {
-            path: args.path,
+          const path = validateString(args.path, 'path');
+
+          // Basic path validation - prevent directory traversal
+          if (path.includes('..') || path.startsWith('/') || path.includes('\x00')) {
+            throw new Error('Invalid file path');
+          }
+
+          const fileContents = await invoke<string>('read_file_tool_secure', {
+            path,
           });
           return { content: fileContents };
         }
 
-        case 'write_file':
-          await invoke('write_file_tool', {
-            path: args.path,
-            contents: args.contents,
+        case 'write_file': {
+          const path = validateString(args.path, 'path');
+          const contents = validateString(args.contents, 'contents');
+
+          // Path validation
+          if (path.includes('..') || path.startsWith('/') || path.includes('\x00')) {
+            throw new Error('Invalid file path');
+          }
+
+          await invoke('write_file_tool_secure', {
+            path,
+            contents,
           });
           return { content: 'File written successfully' };
+        }
 
         case 'list_files': {
-          const files = await invoke<string[]>('list_files_tool', {
-            path: args.path,
-            recursive: args.recursive || false,
+          const path = validateString(args.path, 'path');
+
+          // Path validation
+          if (path.includes('..') || path.startsWith('/') || path.includes('\x00')) {
+            throw new Error('Invalid directory path');
+          }
+
+          const files = await invoke<string[]>('list_files_tool_secure', {
+            path,
+            recursive: Boolean(args.recursive) || false,
           });
           return { content: files };
         }
 
         case 'execute_command': {
-          const commandResult = await invoke<string>('execute_command_tool', {
-            command: args.command,
-            args: args.args || [],
+          const command = validateString(args.command, 'command');
+          const commandArgs = Array.isArray(args.args)
+            ? (args.args as unknown[]).map((arg) => validateString(arg, 'command argument'))
+            : [];
+
+          // This will use the secure command execution with whitelist validation
+          const commandResult = await invoke<string>('execute_command_tool_secure', {
+            command,
+            args: commandArgs,
           });
           return { content: commandResult };
         }
 
         default:
-          throw new Error(`Unknown tool: ${name}`);
+          throw new Error('Unknown tool requested');
       }
     } catch (error) {
+      // Sanitized error response - don't leak internal details
       return {
-        content: error instanceof Error ? error.message : String(error),
+        content: 'Tool execution failed - invalid input or internal error',
         isError: true,
       };
     }

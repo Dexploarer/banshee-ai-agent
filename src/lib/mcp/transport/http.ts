@@ -3,7 +3,7 @@ import type { MCPMessage, MCPServerConfig, MCPTransport } from '../types';
 export class HTTPTransport implements MCPTransport {
   private url: string;
   private config: MCPServerConfig;
-  private eventSource?: EventSource;
+  private eventSource: EventSource | undefined;
   private messageCallbacks: ((message: MCPMessage) => void)[] = [];
   private closeCallbacks: (() => void)[] = [];
   private errorCallbacks: ((error: Error) => void)[] = [];
@@ -50,7 +50,7 @@ export class HTTPTransport implements MCPTransport {
         }
       };
 
-      this.eventSource.onerror = (event) => {
+      this.eventSource.onerror = () => {
         const error = new Error('SSE connection error');
         for (const callback of this.errorCallbacks) {
           callback(error);
@@ -68,7 +68,7 @@ export class HTTPTransport implements MCPTransport {
   async disconnect(): Promise<void> {
     if (this.eventSource) {
       this.eventSource.close();
-      delete (this as any).eventSource;
+      this.eventSource = undefined;
     }
     for (const callback of this.closeCallbacks) {
       callback();
@@ -83,12 +83,22 @@ export class HTTPTransport implements MCPTransport {
 
     const response = await fetch(`${this.url}/rpc`, {
       method: 'POST',
-      headers,
+      headers: {
+        ...headers,
+        'MCP-Protocol-Version': '2025-06-18', // Ensure version header on all requests
+      },
       body: JSON.stringify(message),
       signal: AbortSignal.timeout(this.config.timeout || 30000),
     });
 
     if (!response.ok) {
+      // RFC 9728: Handle WWW-Authenticate header for 401 responses
+      if (response.status === 401) {
+        const wwwAuth = response.headers.get('WWW-Authenticate');
+        if (wwwAuth) {
+          await this.handleAuthError(response, wwwAuth);
+        }
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -115,6 +125,7 @@ export class HTTPTransport implements MCPTransport {
 
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
+      'MCP-Protocol-Version': '2025-06-18', // Required by latest MCP specification
       ...this.config.headers,
     };
 
@@ -142,5 +153,44 @@ export class HTTPTransport implements MCPTransport {
     }
 
     return headers;
+  }
+
+  // RFC 9728: Handle protected resource metadata discovery
+  private async handleAuthError(_response: Response, wwwAuth: string): Promise<void> {
+    try {
+      // Parse WWW-Authenticate header for protected resource metadata URL
+      const metadataMatch = wwwAuth.match(/protected_resource_metadata=([^\\s,]+)/);
+      if (metadataMatch?.[1]) {
+        const metadataUrl = metadataMatch[1];
+        await this.discoverAuthorizationServer(metadataUrl);
+      }
+    } catch (error) {
+      console.warn('Failed to handle auth error:', error);
+    }
+  }
+
+  // RFC 9728: Discover authorization server from protected resource metadata
+  private async discoverAuthorizationServer(metadataUrl: string): Promise<void> {
+    try {
+      const response = await fetch(metadataUrl, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'MCP-Protocol-Version': '2025-06-18',
+        },
+      });
+
+      if (response.ok) {
+        const metadata = await response.json();
+        if (metadata.authorization_server) {
+          // Update auth configuration with discovered authorization server
+          if (this.config.auth) {
+            this.config.auth.authorizationServerUrl = metadata.authorization_server;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to discover authorization server:', error);
+    }
   }
 }

@@ -26,6 +26,8 @@ export { HTTPTransport } from './transport/http';
 export { StdioTransport } from './transport/stdio';
 export { LocalTransport } from './transport/local';
 
+import type { BansheeProviderConfig, MCPServer } from './types';
+
 // Default server configurations
 export const defaultMCPServers: MCPServer[] = [
   {

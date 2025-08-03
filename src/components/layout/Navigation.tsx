@@ -2,6 +2,8 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
 import { BarChart3, Bot, MessageSquare, Settings, Zap } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 const navigationItems = [
   {
@@ -41,9 +43,13 @@ export function Navigation() {
     <aside className="w-64 border-r bg-card/80 glass">
       <nav className="flex h-full flex-col p-4">
         {/* Logo/Brand */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gradient">Banshee</h1>
-          <p className="text-sm text-muted-foreground">AI Agent Portal</p>
+        <div className="mb-8 flex items-center gap-3">
+          <img src={bansheeLogoTransparent} alt="Banshee Logo" className="h-10 w-10 dark:hidden" />
+          <img src={bansheeLogoWhite} alt="Banshee Logo" className="h-10 w-10 hidden dark:block" />
+          <div>
+            <h1 className="text-2xl font-bold text-gradient">Banshee</h1>
+            <p className="text-sm text-muted-foreground">AI Agent Portal</p>
+          </div>
         </div>
 
         {/* Navigation Items */}

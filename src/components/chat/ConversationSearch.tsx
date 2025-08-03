@@ -71,7 +71,9 @@ export function ConversationSearch({ onSelectConversation, className }: Conversa
           <Input
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && handleSearch()
+            }
             placeholder="Search conversations..."
             className="pl-10"
           />

@@ -69,7 +69,7 @@ export function useMCPClient() {
 
   const getResource = useCallback(
     async (serverId: string, uri: string) => {
-      return client.getResource(serverId, uri);
+      return client.readResource(serverId, uri);
     },
     [client]
   );

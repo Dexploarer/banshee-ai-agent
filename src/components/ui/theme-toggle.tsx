@@ -11,7 +11,10 @@ export function ThemeToggle({ className }: { className?: string }) {
     const currentTheme = theme || 'system';
     const currentIndex = themes.indexOf(currentTheme);
     const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
+    const nextTheme = themes[nextIndex];
+    if (nextTheme) {
+      setTheme(nextTheme);
+    }
   };
 
   const getIcon = () => {
