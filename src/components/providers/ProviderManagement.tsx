@@ -29,6 +29,7 @@ import { getAuthInstructions } from '@/lib/ai/providers/auth';
 import { getProviderManager } from '@/lib/ai/providers/manager';
 import { supportsOAuthForAPI } from '@/lib/ai/providers/oauth-config';
 import type { AuthMethod } from '@/lib/ai/providers/types';
+import type { ProviderInstance } from '@/lib/ai/providers/manager';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle,
@@ -55,7 +56,9 @@ interface ProviderManagementProps {
 }
 
 export function ProviderManagement({ className }: ProviderManagementProps) {
-  const [providers, setProviders] = useState(getProviderManager().getAllProviders());
+  const [providers, setProviders] = useState<ProviderInstance[]>(
+    getProviderManager().getAllProviders()
+  );
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [authDialog, setAuthDialog] = useState(false);
   const [authMethod, setAuthMethod] = useState<AuthMethod>('api_key');
@@ -497,7 +500,7 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
 }
 
 interface ProviderCardProps {
-  provider: Record<string, unknown>;
+  provider: ProviderInstance;
   onAuthenticate: (providerId: string, method: AuthMethod) => void;
   onRemoveAuth: (providerId: string) => void;
   onToggle: (providerId: string, enabled: boolean) => void;

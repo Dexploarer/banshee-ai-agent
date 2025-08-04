@@ -141,6 +141,7 @@ export interface SearchMemoriesRequest {
   memory_types?: MemoryType[];
   tags?: string[];
   limit?: number;
+  offset?: number;
   similarity_threshold?: number;
 }
 

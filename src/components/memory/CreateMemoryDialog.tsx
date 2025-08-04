@@ -1,7 +1,8 @@
 import type React from 'react';
 import { useState } from 'react';
 import { MemoryUtils } from '../../lib/ai/memory/client';
-import type { CreateMemoryRequest, MemoryType } from '../../lib/ai/memory/types';
+import { MemoryType } from '../../lib/ai/memory/types';
+import type { CreateMemoryRequest } from '../../lib/ai/memory/types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
@@ -57,8 +58,8 @@ export function CreateMemoryDialog({
         agent_id: agentId,
         memory_type: formData.memory_type!,
         content: formData.content.trim(),
-        tags: formData.tags,
-        metadata: formData.metadata,
+        tags: formData.tags || [],
+        metadata: formData.metadata || {},
       });
 
       // Reset form
@@ -132,7 +133,7 @@ export function CreateMemoryDialog({
           <Label htmlFor="memory-type">Memory Type</Label>
           <Select
             value={formData.memory_type}
-            onValueChange={(value: MemoryType) =>
+            onValueChange={(value: string) =>
               setFormData((prev) => ({ ...prev, memory_type: value }))
             }
           >

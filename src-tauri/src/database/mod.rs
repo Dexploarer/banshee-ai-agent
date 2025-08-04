@@ -7,12 +7,33 @@ pub mod memory;
 pub mod schema;
 pub mod simple_memory;
 pub mod embeddings;
+pub mod neural_network;
+pub mod neural_embeddings;
+pub mod memory_sequence_models;
+pub mod neural_knowledge_graph;
 pub mod simple_commands;
+pub mod graph_commands;
+
+// #[cfg(test)]
+// mod tests;
+
+// #[cfg(test)]
+// mod integration_tests;
+
+#[cfg(test)]
+mod neural_tests;
+
+// #[cfg(test)]
+// mod memory_flow_tests;
 
 // Re-export key types for easier usage
 pub use memory::*;
 pub use simple_memory::SimpleMemoryManager;
 pub use embeddings::{EmbeddingService, TransformerEmbeddingService};
+pub use neural_network::{NeuralNetwork, NetworkBuilder, ActivationFunction, TrainingData};
+pub use neural_embeddings::{NeuralEmbeddingService, EmbeddingConfig, EmbeddingStats};
+pub use memory_sequence_models::{MemorySequenceModel, MemorySequenceAnalyzer, SequenceModelType, MemoryPatternAnalysis, LSTMCell, GRUCell};
+pub use neural_knowledge_graph::{NeuralKnowledgeGraph, NeuralGraphConfig, NeuralGraphStatistics, NeuralRelationshipType};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbConversation {

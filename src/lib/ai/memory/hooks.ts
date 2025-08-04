@@ -11,13 +11,13 @@ import type {
   KnowledgeNode,
   MemoryFilter,
   MemorySearchResult,
-  MemoryType,
   SearchMemoriesRequest,
   SharedKnowledge,
   UseKnowledgeGraphReturn,
   UseKnowledgeReturn,
   UseMemoryReturn,
 } from './types';
+import { MemoryType } from './types';
 
 /**
  * Hook for managing agent memories

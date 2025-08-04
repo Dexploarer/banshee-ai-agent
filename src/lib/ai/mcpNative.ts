@@ -2,6 +2,8 @@ import type { MCPServer } from '@/lib/mcp/types';
 import { type MCPServerConfigWithOAuth, getRFC9728Discovery } from '@/lib/oauth/rfc9728';
 import { useMCPStore } from '@/store/mcpStore';
 import { experimental_createMCPClient } from 'ai';
+import { tokenManager } from '@/lib/mcp/oauth/token-manager';
+import { oauthFlow, type OAuthConfig } from '@/lib/mcp/oauth/oauth-flow';
 
 /**
  * Native AI SDK MCP Integration with OAuth 2.1 and RFC 9728 Support
@@ -51,8 +53,8 @@ export class NativeMCPIntegration {
       const enhancedConfig = await this.enhanceServerConfig(server);
       this.serverConfigs.set(server.id, enhancedConfig);
 
+      let client: unknown;
       const clientConfig: Record<string, unknown> = {};
-      const client: unknown = await experimental_createMCPClient(clientConfig);
 
       switch (server.type) {
         case 'stdio':
@@ -301,10 +303,13 @@ export class NativeMCPIntegration {
       // 2. Refresh tokens if needed
       // 3. Perform OAuth flow if no tokens exist
 
-      // For now, we'll add a placeholder for token management
-      const token = await this.getOAuthToken(config);
+      // Get valid OAuth token
+      const token = await this.getValidOAuthToken(config);
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token.access_token}`;
+      } else if (config.oauth?.enabled) {
+        // No valid token available, OAuth flow needed
+        throw new Error(`OAuth authentication required for ${config.name}`);
       }
     }
 
@@ -312,45 +317,74 @@ export class NativeMCPIntegration {
   }
 
   /**
-   * Get OAuth token for a server (placeholder implementation)
+   * Get valid OAuth token for a server
    */
-  private async getOAuthToken(config: MCPServerConfigWithOAuth): Promise<string | null> {
-    // This is a placeholder implementation
-    // In production, you would implement:
-    // 1. Token storage and retrieval
-    // 2. Token refresh logic
-    // 3. OAuth authorization flow
-
+  private async getValidOAuthToken(
+    config: MCPServerConfigWithOAuth
+  ): Promise<{ access_token: string } | null> {
     if (!config.oauth?.enabled || !config.oauth.client_id) {
       return null;
     }
 
-    // Check if we have a cached token
-    const cachedToken = this.getStoredToken(config.id);
-    if (cachedToken && !this.isTokenExpired(cachedToken)) {
-      return cachedToken.access_token;
+    // Try to get valid token from token manager
+    const token = await tokenManager.getValidToken(config.id, async (refreshToken: string) => {
+      // Refresh token callback
+      const oauthConfig = this.buildOAuthConfig(config);
+      return await oauthFlow.refreshAccessToken(refreshToken, oauthConfig);
+    });
+
+    return token;
+  }
+
+  /**
+   * Build OAuth configuration from server config
+   */
+  private buildOAuthConfig(config: MCPServerConfigWithOAuth): OAuthConfig {
+    if (!config.oauth?.metadata) {
+      throw new Error('OAuth metadata not available');
     }
 
-    // If no valid token, would trigger OAuth flow
-    console.log(`OAuth token needed for ${config.name}, would trigger authorization flow`);
-    return null;
+    return {
+      serverId: config.id,
+      clientId: config.oauth.client_id!,
+      clientSecret: config.oauth.client_secret,
+      authorizationEndpoint: config.oauth.metadata.authorization_endpoint,
+      tokenEndpoint: config.oauth.metadata.token_endpoint,
+      scopes: config.oauth.scopes || ['read', 'write'],
+      usePKCE: true, // Always use PKCE for security
+    };
   }
 
   /**
-   * Get stored OAuth token (placeholder)
+   * Start OAuth authorization flow for a server
    */
-  private getStoredToken(_serverId: string): unknown {
-    // In production, retrieve from secure storage
-    // For now, return null to indicate no stored token
-    return null;
+  async startOAuthFlow(serverId: string): Promise<void> {
+    const config = this.serverConfigs.get(serverId);
+    if (!config || !config.oauth?.enabled) {
+      throw new Error('OAuth not configured for this server');
+    }
+
+    const oauthConfig = this.buildOAuthConfig(config);
+    await oauthFlow.startAuthorizationFlow(oauthConfig);
   }
 
   /**
-   * Check if OAuth token is expired (placeholder)
+   * Handle OAuth callback
    */
-  private isTokenExpired(_token: unknown): boolean {
-    // In production, check token expiration
-    return true;
+  async handleOAuthCallback(serverId: string, code: string, state: string): Promise<void> {
+    const config = this.serverConfigs.get(serverId);
+    if (!config || !config.oauth?.enabled) {
+      throw new Error('OAuth not configured for this server');
+    }
+
+    const oauthConfig = this.buildOAuthConfig(config);
+    await oauthFlow.handleCallback(code, state, oauthConfig);
+
+    // Reconnect to server with new token
+    const server = useMCPStore.getState().servers.find((s) => s.id === serverId);
+    if (server) {
+      await this.connectToServer(server);
+    }
   }
 
   /**

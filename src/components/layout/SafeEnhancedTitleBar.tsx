@@ -12,10 +12,10 @@ import { useEffect, useState } from 'react';
 import { MenuBar } from './MenuBar';
 
 // Safely import Tauri window API
-let windowApi: typeof import('@tauri-apps/api/window') | null = null;
+let windowApi: any = null;
 try {
-  const tauriWindow = await import('@tauri-apps/api/window');
-  windowApi = tauriWindow.getCurrentWindow();
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  windowApi = getCurrentWindow();
 } catch (error) {
   console.warn('Tauri window API not available:', error);
 }

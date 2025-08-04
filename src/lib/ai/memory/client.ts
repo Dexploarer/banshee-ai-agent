@@ -9,12 +9,12 @@ import type {
   KnowledgeNode,
   KnowledgeType,
   MemorySearchResult,
-  MemoryType,
   NodeType,
   RelationshipType,
   SearchMemoriesRequest,
   SharedKnowledge,
 } from './types';
+import { MemoryType } from './types';
 
 /**
  * Client for interacting with the Agent Memory System
@@ -78,6 +78,7 @@ export class MemoryClient {
         memoryTypes: request.memory_types || null,
         tags: request.tags || null,
         limit: request.limit || null,
+        offset: request.offset || null,
         similarityThreshold: request.similarity_threshold || null,
       });
       return results;

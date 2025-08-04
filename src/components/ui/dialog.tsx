@@ -122,4 +122,27 @@ const DialogDescription = React.forwardRef<
 ));
 DialogDescription.displayName = 'DialogDescription';
 
-export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription };
+const DialogTrigger = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    asChild?: boolean;
+  }
+>(({ className, children, asChild = false, ...props }, ref) => {
+  const Component = asChild ? React.Fragment : 'button';
+  return (
+    <Component ref={ref} className={cn(className)} {...props}>
+      {children}
+    </Component>
+  );
+});
+DialogTrigger.displayName = 'DialogTrigger';
+
+export {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+};

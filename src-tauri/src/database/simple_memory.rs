@@ -194,6 +194,10 @@ impl SimpleMemoryManager {
             sql.push_str(&format!(" LIMIT {}", limit));
         }
 
+        if let Some(offset) = query.offset {
+            sql.push_str(&format!(" OFFSET {}", offset));
+        }
+
         let mut stmt = conn.prepare(&sql)?;
         let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter()
             .map(|p| p.as_ref())

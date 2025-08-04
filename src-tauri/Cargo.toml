@@ -39,14 +39,41 @@ base64 = "0.22"
 rand = "0.8"
 lazy_static = "1.4"
 regex = "1.10"
+futures = "0.3"
 # Agent memory and vector search dependencies  
 rusqlite = { version = "0.31", features = ["bundled", "blob", "functions", "vtab"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 ndarray = "0.15"
 bincode = "1.3"
 sha2 = "0.10"
+once_cell = "1.19"
+# Neural network dependencies - using direct FANN-inspired implementation
+# ruv-fann repository has submodule issues, implementing core features directly
+polars = { version = "0.36", features = ["lazy", "csv", "parquet", "json", "temporal", "strings", "dtype-datetime"] }
+fastrand = "2.0"
+# OAuth and encryption dependencies
+aes-gcm = "0.10"
+webbrowser = "1.0"
+thiserror = "1.0"
 # Simplified embedding approach - will use basic similarity functions instead of full transformer models for now
+hex = "0.4"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.27", features = ["signal", "process"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.0"
+serial_test = "3.0"
+
+[profile.test]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256
+rpath = false
 

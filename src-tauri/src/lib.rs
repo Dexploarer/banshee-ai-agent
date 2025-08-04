@@ -5,6 +5,10 @@ mod ai;
 mod mcp;
 mod commands;
 mod database;
+mod validation;
+mod app_state;
+
+use app_state::AppState;
 
 use ai::{
     AIState,
@@ -25,6 +29,9 @@ use mcp::{
     get_agent_configs, get_conversation_history, get_system_status, list_workspace_files,
     execute_agent_tool, read_file_tool, write_file_tool, list_files_tool, execute_command_tool,
     MCPProcessInfo,
+    // OAuth commands
+    store_mcp_oauth_token, get_mcp_oauth_tokens, delete_mcp_oauth_token,
+    clear_all_mcp_oauth_tokens, encrypt_data, decrypt_data, open_oauth_browser,
 };
 
 use commands::{
@@ -41,7 +48,15 @@ use database::{
     simple_commands::{
         MemoryState, init_agent_memory, save_agent_memory, get_agent_memory,
         search_agent_memories, save_shared_knowledge, add_knowledge_graph_node, 
-        add_knowledge_graph_edge, backup_agent_memories,
+        add_knowledge_graph_edge, backup_agent_memories, search_shared_knowledge,
+        get_knowledge_graph,
+    },
+    // Knowledge graph system
+    graph_commands::{
+        create_graph_node, get_graph_node, update_graph_node, delete_graph_node,
+        create_graph_edge, get_graph_edge, update_graph_edge, delete_graph_edge,
+        get_graph_view, find_graph_path, get_graph_neighbors, get_graph_stats,
+        find_graph_clusters, optimize_graph,
     },
 };
 use std::collections::HashMap;
@@ -101,6 +116,18 @@ pub fn run() {
     // Initialize Agent Memory state
     let memory_state = MemoryState::new();
     
+    // Initialize App State with OAuth storage
+    let app_data_dir = dirs::data_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("banshee");
+    let app_state = match AppState::new(app_data_dir) {
+        Ok(state) => state,
+        Err(e) => {
+            error!("Failed to initialize app state: {}", e);
+            panic!("Could not initialize OAuth storage");
+        }
+    };
+    
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
@@ -109,6 +136,7 @@ pub fn run() {
         .manage(mcp_processes)
         .manage(secure_session)
         .manage(memory_state)
+        .manage(app_state)
         .setup(|_app| {
             // Start cleanup tasks within Tauri's async runtime
             tauri::async_runtime::spawn(async {
@@ -191,6 +219,23 @@ pub fn run() {
             add_knowledge_graph_node,
             add_knowledge_graph_edge,
             backup_agent_memories,
+            search_shared_knowledge,
+            get_knowledge_graph,
+            // Enhanced knowledge graph commands
+            create_graph_node,
+            get_graph_node,
+            update_graph_node,
+            delete_graph_node,
+            create_graph_edge,
+            get_graph_edge,
+            update_graph_edge,
+            delete_graph_edge,
+            get_graph_view,
+            find_graph_path,
+            get_graph_neighbors,
+            get_graph_stats,
+            find_graph_clusters,
+            optimize_graph,
             // Secure commands
             create_session,
             generate_csrf_token,
@@ -201,6 +246,14 @@ pub fn run() {
             execute_agent_tool_secure,
             store_api_key_secure,
             get_api_key_secure,
+            // OAuth token management
+            store_mcp_oauth_token,
+            get_mcp_oauth_tokens,
+            delete_mcp_oauth_token,
+            clear_all_mcp_oauth_tokens,
+            encrypt_data,
+            decrypt_data,
+            open_oauth_browser,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

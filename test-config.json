@@ -1,0 +1,192 @@
+{
+  "testFrameworks": {
+    "frontend": {
+      "runner": "vitest",
+      "environment": "jsdom",
+      "setupFiles": ["./src/test/setup.ts"],
+      "coverage": {
+        "provider": "@vitest/coverage-v8",
+        "reporter": ["text", "json", "html", "lcov"],
+        "exclude": [
+          "node_modules/",
+          "src/test/",
+          "**/*.d.ts",
+          "**/*.config.*",
+          "src-tauri/",
+          "dist/",
+          "build/",
+          "e2e/"
+        ],
+        "thresholds": {
+          "global": {
+            "branches": 80,
+            "functions": 80,
+            "lines": 80,
+            "statements": 80
+          }
+        }
+      }
+    },
+    "backend": {
+      "runner": "cargo test",
+      "features": ["test-utils"],
+      "coverage": {
+        "tool": "tarpaulin",
+        "args": [
+          "--out",
+          "xml",
+          "html",
+          "json",
+          "--engine",
+          "llvm",
+          "--exclude-files",
+          "src/main.rs",
+          "--exclude-files",
+          "tests/*",
+          "--target-dir",
+          "target/tarpaulin"
+        ],
+        "thresholds": {
+          "line": 80,
+          "branch": 70
+        }
+      }
+    },
+    "e2e": {
+      "runner": "playwright",
+      "browsers": ["chromium", "firefox", "webkit"],
+      "retries": 2,
+      "timeout": 30000,
+      "workers": 4
+    }
+  },
+  "testCategories": {
+    "unit": {
+      "description": "Individual component and function tests",
+      "patterns": ["**/*.test.{ts,tsx,js,jsx}", "**/*.spec.{ts,tsx,js,jsx}"],
+      "timeout": 5000
+    },
+    "integration": {
+      "description": "Tests that verify component interactions",
+      "patterns": ["**/*.integration.{ts,tsx,js,jsx}"],
+      "timeout": 10000
+    },
+    "e2e": {
+      "description": "End-to-end user workflow tests",
+      "patterns": ["e2e/**/*.spec.ts"],
+      "timeout": 30000
+    },
+    "performance": {
+      "description": "Performance and load tests",
+      "patterns": ["**/*.perf.{ts,tsx,js,jsx}"],
+      "timeout": 60000
+    },
+    "security": {
+      "description": "Security and vulnerability tests",
+      "patterns": ["**/*.security.{ts,tsx,js,jsx}"],
+      "timeout": 15000
+    }
+  },
+  "testEnvironments": {
+    "development": {
+      "database": "sqlite::memory:",
+      "api_base_url": "http://localhost:3000",
+      "debug": true,
+      "log_level": "debug"
+    },
+    "ci": {
+      "database": "/tmp/test.db",
+      "api_base_url": "http://localhost:3000",
+      "debug": false,
+      "log_level": "error",
+      "parallel": true,
+      "timeout_multiplier": 2
+    },
+    "production-like": {
+      "database": "postgresql://test:test@localhost:5432/banshee_test",
+      "api_base_url": "https://staging.banshee.app",
+      "debug": false,
+      "log_level": "warn"
+    }
+  },
+  "mockingStrategies": {
+    "api_calls": "mock_all_external",
+    "file_system": "in_memory",
+    "database": "test_database",
+    "time": "controllable",
+    "crypto": "deterministic_for_tests"
+  },
+  "testDataManagement": {
+    "fixtures": {
+      "location": "./src/test/fixtures/",
+      "auto_cleanup": true,
+      "seed_data": true
+    },
+    "factories": {
+      "memory": "TestDataFactory.createAgentMemory",
+      "user": "TestDataFactory.createUser",
+      "agent": "TestDataFactory.createAgent"
+    },
+    "cleanup": {
+      "after_each_test": true,
+      "after_test_suite": true,
+      "temp_files": true,
+      "test_database": true
+    }
+  },
+  "reportingAndAnalytics": {
+    "test_results": {
+      "formats": ["junit", "json", "html"],
+      "output_dir": "./test-results/",
+      "include_screenshots": true,
+      "include_traces": true
+    },
+    "coverage": {
+      "formats": ["lcov", "html", "json", "text"],
+      "output_dir": "./coverage/",
+      "combine_reports": true
+    },
+    "performance": {
+      "benchmark_results": "./performance-results/",
+      "memory_usage_tracking": true,
+      "execution_time_tracking": true
+    }
+  },
+  "continuousIntegration": {
+    "github_actions": {
+      "test_matrix": {
+        "os": ["ubuntu-latest", "windows-latest", "macos-latest"],
+        "node_version": ["18", "20"],
+        "rust_version": ["stable", "beta"]
+      },
+      "cache_strategy": "aggressive",
+      "artifact_retention": "30 days"
+    },
+    "pre_commit_hooks": {
+      "run_unit_tests": true,
+      "run_type_check": true,
+      "run_linting": true,
+      "run_security_scan": true
+    },
+    "quality_gates": {
+      "minimum_coverage": 80,
+      "maximum_test_duration": "10 minutes",
+      "no_failing_tests": true,
+      "no_security_vulnerabilities": true
+    }
+  },
+  "testUtilities": {
+    "helpers": "./src/test/test-helpers.ts",
+    "matchers": "./src/test/custom-matchers.ts",
+    "setup": "./src/test/setup.ts",
+    "mocks": "./src/test/mocks/",
+    "fixtures": "./src/test/fixtures/"
+  },
+  "debugging": {
+    "enable_debug_mode": true,
+    "verbose_output": false,
+    "screenshot_on_failure": true,
+    "trace_on_failure": true,
+    "keep_artifacts_on_failure": true
+  }
+}

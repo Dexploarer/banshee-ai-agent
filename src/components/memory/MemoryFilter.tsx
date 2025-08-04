@@ -1,6 +1,7 @@
 import React from 'react';
 import { MemoryUtils } from '../../lib/ai/memory/client';
-import type { MemoryFilter as MemoryFilterType, MemoryType } from '../../lib/ai/memory/types';
+import { MemoryType } from '../../lib/ai/memory/types';
+import type { MemoryFilter as MemoryFilterType } from '../../lib/ai/memory/types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader } from '../ui/card';

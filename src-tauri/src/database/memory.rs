@@ -32,6 +32,21 @@ pub enum MemoryType {
     Pattern,
 }
 
+impl std::fmt::Display for MemoryType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MemoryType::Conversation => write!(f, "Conversation"),
+            MemoryType::Task => write!(f, "Task"),
+            MemoryType::Learning => write!(f, "Learning"),
+            MemoryType::Context => write!(f, "Context"),
+            MemoryType::Tool => write!(f, "Tool"),
+            MemoryType::Error => write!(f, "Error"),
+            MemoryType::Success => write!(f, "Success"),
+            MemoryType::Pattern => write!(f, "Pattern"),
+        }
+    }
+}
+
 // Shared Knowledge Types
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SharedKnowledge {
@@ -104,6 +119,11 @@ pub enum RelationshipType {
     Opposite,
     CausedBy,
     LeadsTo,
+    PartOf,
+    SimilarTo,
+    RequiredFor,
+    CreatedBy,
+    ModifiedBy,
 }
 
 // Memory Search and Retrieval
@@ -116,6 +136,7 @@ pub struct MemoryQuery {
     pub embedding: Option<Vec<f32>>,
     pub similarity_threshold: Option<f32>,
     pub limit: Option<usize>,
+    pub offset: Option<usize>,
     pub time_range: Option<(DateTime<Utc>, DateTime<Utc>)>,
 }
 

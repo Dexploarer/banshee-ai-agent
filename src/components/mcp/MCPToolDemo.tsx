@@ -17,11 +17,17 @@ interface ToolResult {
   timestamp: string;
 }
 
+interface MCPToolWithExecute {
+  name: string;
+  description?: string;
+  execute?: (args: Record<string, unknown>) => Promise<unknown>;
+}
+
 export function MCPToolDemo() {
   const nativeMCP = useNativeMCP();
   const connectedServers = useMCPStore((state) => state.getConnectedServers());
   const [selectedServer, setSelectedServer] = useState<string>('');
-  const [availableTools, setAvailableTools] = useState<Record<string, unknown>>({});
+  const [availableTools, setAvailableTools] = useState<Record<string, MCPToolWithExecute>>({});
   const [availableResources, setAvailableResources] = useState<MCPResource[]>([]);
   const [selectedTool, setSelectedTool] = useState<string>('');
   const [toolArgs, setToolArgs] = useState<string>('{}');
@@ -66,7 +72,7 @@ export function MCPToolDemo() {
 
       // Execute the tool using native AI SDK tools
       const tool = availableTools[selectedTool];
-      if (tool?.execute) {
+      if (tool && typeof tool.execute === 'function') {
         const result = await tool.execute(args);
         setLastResult({
           success: true,
@@ -170,7 +176,8 @@ export function MCPToolDemo() {
                 <option value="">Choose a tool...</option>
                 {Object.entries(availableTools).map(([name, tool]) => (
                   <option key={name} value={name}>
-                    {name} - {tool.description?.substring(0, 50)}...
+                    {name} -{' '}
+                    {tool.description ? tool.description.substring(0, 50) : 'No description'}...
                   </option>
                 ))}
               </select>
@@ -302,12 +309,12 @@ export function MCPToolDemo() {
                 <div id="linked-resources" className="space-y-1">
                   {lastResult.linkedResources.map((resource, index) => (
                     <Badge
-                      key={`${resource.name || resource.uri}-${index}`}
+                      key={`${resource.name || resource.uri || 'unknown'}-${index}`}
                       variant="outline"
                       className="mr-2"
                     >
                       <Link className="h-3 w-3 mr-1" />
-                      {resource.name || resource.uri}
+                      {resource.name || resource.uri || 'Unknown Resource'}
                     </Badge>
                   ))}
                 </div>
@@ -321,12 +328,14 @@ export function MCPToolDemo() {
                   AI Elicitation Prompts
                 </label>
                 <div className="space-y-1">
-                  {lastResult.elicitationPrompts.map((prompt, index) => (
+                  {lastResult.elicitationPrompts?.map((prompt, index) => (
                     <div
                       key={`prompt-${String(prompt).slice(0, 10)}`}
                       className="p-2 bg-blue-50 rounded border-l-4 border-blue-400 text-sm"
                     >
-                      {prompt.text || prompt}
+                      {typeof prompt === 'object' && prompt !== null && 'text' in prompt
+                        ? (prompt as { text: string }).text
+                        : String(prompt)}
                     </div>
                   ))}
                 </div>
