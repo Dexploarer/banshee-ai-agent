@@ -9,12 +9,12 @@ import { openai } from '@ai-sdk/openai';
 // import { deepseek } from '@ai-sdk/deepseek';
 import { generateText, streamText } from 'ai';
 import { getNativeMCPIntegration } from './mcpNative';
-import { getAvailableTools } from './tools';
-import { getProviderManager } from './providers/manager';
 import { getAuthManager } from './providers/auth';
-import { isModelAccessible } from './providers/subscription';
+import { getProviderManager } from './providers/manager';
 import { globalRateLimiter } from './providers/rate-limiting';
-import type { ModelConfig, ProviderConfig } from './providers/types';
+import { isModelAccessible } from './providers/subscription';
+import type { ModelConfig } from './providers/types';
+import { getAvailableTools } from './tools';
 
 // Types for AI SDK compatibility
 interface CoreMessage {
@@ -87,7 +87,7 @@ export function getProviders(): Record<string, AIProvider> {
     const defaultModel =
       providerInstance.models.find((m) => m.is_default && m.is_active)?.model_id || models[0];
 
-    if (models.length > 0) {
+    if (models.length > 0 && defaultModel) {
       legacyProviders[providerInstance.id] = {
         id: providerInstance.id,
         name: providerInstance.provider.display_name,
@@ -107,8 +107,8 @@ export const providers = getProviders();
  * Enhanced AI Runtime with MCP Integration
  */
 export class AIRuntime {
-  private provider: string;
-  private model: string;
+  private provider = '';
+  private model = '';
   private tools: Record<string, AITool> = {};
   private modelConfig: ModelConfig | null = null;
   private providerManager = getProviderManager();
@@ -120,12 +120,14 @@ export class AIRuntime {
       const authenticatedProviders = this.providerManager.getAuthenticatedProviders();
       if (authenticatedProviders.length > 0) {
         const firstProvider = authenticatedProviders[0];
-        this.provider = firstProvider.id;
-        this.model =
-          model ||
-          firstProvider.models.find((m) => m.is_default)?.model_id ||
-          firstProvider.models[0]?.model_id ||
-          '';
+        if (firstProvider) {
+          this.provider = firstProvider.id;
+          this.model =
+            model ||
+            firstProvider.models.find((m) => m.is_default)?.model_id ||
+            firstProvider.models[0]?.model_id ||
+            '';
+        }
       } else {
         console.warn('No authenticated providers available. Using offline mode.');
         // Set default values for offline mode
@@ -223,8 +225,8 @@ export class AIRuntime {
       );
     }
 
-    // Get authentication headers
-    const authHeaders = await this.authManager.getAuthHeaders(this.provider);
+    // Get authentication headers (not used in current implementation but available)
+    // const _authHeaders = await this.authManager.getAuthHeaders(this.provider);
 
     switch (this.provider) {
       case 'anthropic':
@@ -235,7 +237,7 @@ export class AIRuntime {
           console.log('Using Anthropic OAuth token for Pro/Max subscription access');
           return anthropic(this.model, {
             apiKey: authConfig.credentials.access_token,
-          });
+          } as any);
         }
         // Default to API key authentication
         return anthropic(this.model);
@@ -297,7 +299,7 @@ export class AIRuntime {
         this.model,
         authConfig
       );
-      
+
       if (!rateLimitCheck.allowed) {
         throw new Error(`Rate limit exceeded: ${rateLimitCheck.reason}`);
       }
@@ -315,7 +317,6 @@ export class AIRuntime {
       tools: this.tools,
       maxRetries: 2,
       temperature: options.temperature || 0.7,
-      maxSteps: options.maxTokens ? Math.ceil(options.maxTokens / 1000) : undefined,
       ...(options.abortSignal && { abortSignal: options.abortSignal }),
       ...(options.toolChoice && { toolChoice: options.toolChoice }),
       onChunk: (chunk) => {
@@ -331,12 +332,12 @@ export class AIRuntime {
       onFinish: (result) => {
         // Track usage
         this.trackUsage(result, startTime);
-        
+
         // Record rate limit usage for subscription users
         if (authConfig?.method === 'oauth2' && authConfig.subscription_info) {
           globalRateLimiter.recordUsage(this.provider, this.model);
         }
-        
+
         options.onFinish?.(result);
       },
     });
@@ -361,7 +362,7 @@ export class AIRuntime {
         this.model,
         authConfig
       );
-      
+
       if (!rateLimitCheck.allowed) {
         throw new Error(`Rate limit exceeded: ${rateLimitCheck.reason}`);
       }
@@ -379,7 +380,6 @@ export class AIRuntime {
       tools: this.tools,
       maxRetries: 2,
       temperature: options.temperature || 0.7,
-      maxSteps: options.maxTokens ? Math.ceil(options.maxTokens / 1000) : undefined,
       ...(options.toolChoice && { toolChoice: options.toolChoice }),
     });
 
@@ -397,7 +397,7 @@ export class AIRuntime {
   /**
    * Track API usage for analytics and cost monitoring
    */
-  private trackUsage(result: any, startTime: number): void {
+  private trackUsage(result: any, _startTime: number): void {
     if (!this.modelConfig || !result.usage) return;
 
     const inputTokens = result.usage.promptTokens || 0;

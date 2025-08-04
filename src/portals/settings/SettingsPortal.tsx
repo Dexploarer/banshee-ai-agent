@@ -3,7 +3,8 @@ import { UsageAnalytics } from '@/components/providers/UsageAnalytics';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Database, Palette, Shield, Zap, BarChart3 } from 'lucide-react';
+import { WalletConnectButton, WalletStatus } from '@/components/wallet';
+import { BarChart3, Database, Palette, Shield, Wallet, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 export function SettingsPortal() {
@@ -20,10 +21,14 @@ export function SettingsPortal() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="providers" className="flex items-center gap-2">
             <Zap className="h-4 w-4" />
             Providers
+          </TabsTrigger>
+          <TabsTrigger value="wallet" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Wallet
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
@@ -46,6 +51,101 @@ export function SettingsPortal() {
         {/* Providers Tab */}
         <TabsContent value="providers" className="space-y-4">
           <ProviderManagement />
+        </TabsContent>
+
+        {/* Wallet Tab */}
+        <TabsContent value="wallet" className="space-y-4">
+          <div className="grid gap-6">
+            {/* Wallet Connection Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Phantom Wallet
+                </CardTitle>
+                <CardDescription>
+                  Connect your Phantom wallet using Google authentication for secure, embedded
+                  wallet functionality
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <WalletStatus />
+
+                <div className="pt-4 border-t">
+                  <WalletConnectButton variant="default" size="default" className="w-full" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Wallet Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>About Embedded Wallets</CardTitle>
+                <CardDescription>Learn about Phantom's embedded wallet technology</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex items-start gap-3">
+                      <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-blue-900 dark:text-blue-100">
+                          Seedless Security
+                        </p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          No seed phrases to manage. Your wallet is secured through distributed key
+                          management.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-900/20">
+                    <div className="flex items-start gap-3">
+                      <Zap className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-green-900 dark:text-green-100">
+                          Easy Authentication
+                        </p>
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          Sign in with your Google account to create and access your wallet.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 border rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                    <div className="flex items-start gap-3">
+                      <BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-amber-900 dark:text-amber-100">
+                          Beta Feature
+                        </p>
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          Phantom embedded wallets are currently in beta. Use with caution in
+                          production environments.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <Button variant="outline" className="w-full" asChild>
+                    <a
+                      href="https://phantom.com/learn/crypto-101/embedded-wallets"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      Learn More About Embedded Wallets
+                      <Zap className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Security Tab */}

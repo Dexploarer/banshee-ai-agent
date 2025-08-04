@@ -4,13 +4,15 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { Toaster } from './components/ui/toast';
-import { initDatabase } from './lib/database';
 import { initializeOAuthListener } from './lib/ai/providers/oauth-handler';
-import { AgentsPortal } from './portals/agents/AgentsPortal';
+import { initDatabase } from './lib/database';
+import { initializeWalletOAuthListener } from './lib/wallet/oauth-handler';
+import { PhantomProvider } from './lib/wallet/phantom-provider';
 import { ChatPortal } from './portals/chat/ChatPortal';
 import { DashboardPortal } from './portals/dashboard/DashboardPortal';
 import { MCPPortal } from './portals/mcp/MCPPortal';
 import { SettingsPortal } from './portals/settings/SettingsPortal';
+import { WorkspacePortal } from './portals/workspace/WorkspacePortal';
 import { useThemeStore } from './store/themeStore';
 import './globals.css';
 
@@ -53,6 +55,17 @@ function App() {
         return null;
       });
 
+    // Initialize wallet OAuth listener
+    const unlistenWalletOAuth = initializeWalletOAuthListener()
+      .then((unlisten) => {
+        console.log('Wallet OAuth listener initialized');
+        return unlisten;
+      })
+      .catch((error) => {
+        console.error('Wallet OAuth listener init error:', error);
+        return null;
+      });
+
     // Initialize theme on mount
     const effectiveTheme = theme === 'system' ? systemTheme : theme;
     console.log('Theme:', theme, 'System theme:', systemTheme, 'Effective:', effectiveTheme);
@@ -70,30 +83,46 @@ function App() {
           unlisten();
         }
       });
+      unlistenWalletOAuth.then((unlisten) => {
+        if (unlisten) {
+          unlisten();
+        }
+      });
     };
   }, [theme, systemTheme]);
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <div className="h-screen bg-background text-foreground">
-            <Layout>
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<DashboardPortal />} />
-                  <Route path="/dashboard" element={<DashboardPortal />} />
-                  <Route path="/chat" element={<ChatPortal />} />
-                  <Route path="/agents" element={<AgentsPortal />} />
-                  <Route path="/settings" element={<SettingsPortal />} />
-                  <Route path="/mcp" element={<MCPPortal />} />
-                </Routes>
-              </ErrorBoundary>
-            </Layout>
-            <Toaster />
-          </div>
-        </Router>
-      </QueryClientProvider>
+      <PhantomProvider
+        config={{
+          organizationId: 'banshee-ai-agent',
+          apiBaseUrl: 'https://api.phantom.app',
+          environment: 'development',
+          addressTypes: ['solana'],
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="h-screen bg-background text-foreground">
+              <Layout>
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/" element={<DashboardPortal />} />
+                    <Route path="/dashboard" element={<DashboardPortal />} />
+                    <Route path="/workspace" element={<WorkspacePortal />} />
+                    <Route path="/chat" element={<ChatPortal />} />
+                    <Route path="/settings" element={<SettingsPortal />} />
+                    <Route path="/mcp" element={<MCPPortal />} />
+                    {/* Legacy route - redirect to workspace */}
+                    <Route path="/agents" element={<WorkspacePortal />} />
+                  </Routes>
+                </ErrorBoundary>
+              </Layout>
+              <Toaster />
+            </div>
+          </Router>
+        </QueryClientProvider>
+      </PhantomProvider>
     </ErrorBoundary>
   );
 }

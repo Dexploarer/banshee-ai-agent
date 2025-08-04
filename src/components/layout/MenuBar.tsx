@@ -4,75 +4,72 @@
  * Provides comprehensive application menus with keyboard shortcuts
  */
 
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useThemeStore } from '@/store/themeStore';
+import { getProviderManager } from '@/lib/ai/providers/manager';
+import { clearAllData, exportConversation } from '@/lib/database';
+import { cn } from '@/lib/utils';
 import { useAgentStore } from '@/store/agentStore';
+import { useThemeStore } from '@/store/themeStore';
 import {
-  FileText,
-  Save,
-  Download,
-  Upload,
-  Settings,
-  LogOut,
-  Copy,
-  Clipboard,
-  Scissors,
-  Search,
-  Undo,
-  Redo,
-  Bold,
-  Italic,
-  Link,
-  MessageSquare,
-  Bot,
-  Zap,
-  Database,
-  Brain,
-  Terminal,
-  Code,
-  Bug,
-  BookOpen,
-  HelpCircle,
-  Info,
-  Keyboard,
-  Moon,
-  Sun,
-  Monitor,
-  Maximize2,
-  Minimize2,
-  PanelLeft,
-  PanelRight,
-  RefreshCw,
-  Home,
-  History,
-  Star,
-  GitBranch,
-  Shield,
   Activity,
   Archive,
-  Trash2,
-  Plus,
-  FolderOpen,
-  FileCode,
-  Sparkles,
-  Palette,
-  Layout,
+  Bold,
+  BookOpen,
+  Bot,
+  Brain,
+  Bug,
+  Clipboard,
+  Code,
   Command,
+  Copy,
+  Database,
+  Download,
+  FileCode,
+  FolderOpen,
+  GitBranch,
+  HelpCircle,
+  History,
+  Home,
+  Info,
+  Italic,
+  Keyboard,
+  Layout,
+  Link,
+  LogOut,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  Monitor,
+  Moon,
+  Palette,
+  PanelLeft,
+  PanelRight,
+  Plus,
+  Redo,
+  RefreshCw,
+  Scissors,
+  Search,
+  Settings,
+  Shield,
+  Sparkles,
+  Star,
+  Sun,
+  Terminal,
+  Trash2,
+  Undo,
+  Upload,
+  Zap,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { exportConversation, clearAllData } from '@/lib/database';
 import { useState } from 'react';
-import { getProviderManager } from '@/lib/ai/providers/manager';
+import { useNavigate } from 'react-router-dom';
 
 interface MenuBarProps {
   className?: string;
@@ -205,7 +202,10 @@ export function MenuBar({ className }: MenuBarProps) {
             <span className="ml-auto text-xs opacity-60">⌘O</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleExportChat} disabled={!activeSession}>
+          <DropdownMenuItem
+            onClick={handleExportChat}
+            className={!activeSession ? 'opacity-50 cursor-not-allowed' : ''}
+          >
             <Download className="mr-2 h-4 w-4" />
             Export Chat...
             <span className="ml-auto text-xs opacity-60">⌘E</span>

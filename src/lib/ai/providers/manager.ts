@@ -5,10 +5,10 @@
  * Integrates with AI SDK v5+ and handles provider lifecycle
  */
 
-import type { ProviderConfig, ModelConfig, AuthConfig, AuthMethod } from './types';
-import { ALL_PROVIDERS, getProviderById } from './types';
-import { ALL_MODELS, getModelsByProvider } from './models';
 import { getAuthManager } from './auth';
+import { getModelsByProvider } from './models';
+import type { AuthConfig, AuthMethod, ModelConfig, ProviderConfig } from './types';
+import { ALL_PROVIDERS } from './types';
 
 export interface ProviderInstance {
   id: string;
@@ -44,6 +44,8 @@ export class ProviderManager {
   private providers = new Map<string, ProviderInstance>();
   private authManager = getAuthManager();
   private usageStats = new Map<string, ProviderUsage[]>();
+  private availableModelsCache: ModelConfig[] | null = null;
+  private cacheTimestamp = 0;
 
   constructor() {
     this.initializeProviders();
@@ -139,6 +141,9 @@ export class ProviderManager {
       provider.last_used = new Date().toISOString();
       this.providers.set(providerId, provider);
 
+      // Invalidate cache
+      this.availableModelsCache = null;
+
       return true;
     } catch (error) {
       provider.auth_status = 'error';
@@ -182,6 +187,9 @@ export class ProviderManager {
           provider.auth_method = 'oauth2';
           provider.last_used = new Date().toISOString();
           this.providers.set(flow.provider_id, provider);
+
+          // Invalidate cache
+          this.availableModelsCache = null;
         }
       }
     }
@@ -196,9 +204,12 @@ export class ProviderManager {
     const provider = this.providers.get(providerId);
     if (provider) {
       provider.auth_status = 'unauthenticated';
-      provider.auth_method = undefined;
-      provider.error_info = undefined;
+      provider.auth_method = undefined as any;
+      provider.error_info = undefined as any;
       this.providers.set(providerId, provider);
+
+      // Invalidate cache
+      this.availableModelsCache = null;
     }
 
     this.authManager.removeAuth(providerId);
@@ -208,6 +219,13 @@ export class ProviderManager {
    * Get available models for authenticated providers
    */
   getAvailableModels(): ModelConfig[] {
+    const now = Date.now();
+    const cacheValid = this.availableModelsCache && now - this.cacheTimestamp < 5000; // 5 second cache
+
+    if (cacheValid) {
+      return this.availableModelsCache || [];
+    }
+
     const authenticatedProviders = this.getAuthenticatedProviders();
     const models: ModelConfig[] = [];
 
@@ -215,7 +233,45 @@ export class ProviderManager {
       models.push(...providerInstance.models.filter((m) => m.is_active));
     }
 
+    // Update cache
+    this.availableModelsCache = models;
+    this.cacheTimestamp = now;
+
     return models;
+  }
+
+  /**
+   * Get available models with provider information
+   */
+  getAvailableModelsWithProvider(): Array<
+    ModelConfig & { provider_name: string; provider_id: string }
+  > {
+    const authenticatedProviders = this.getAuthenticatedProviders();
+    const models: Array<ModelConfig & { provider_name: string; provider_id: string }> = [];
+
+    for (const providerInstance of authenticatedProviders) {
+      const providerModels = providerInstance.models
+        .filter((m) => m.is_active)
+        .map((model) => ({
+          ...model,
+          provider_name: providerInstance.provider.name,
+          provider_id: providerInstance.id,
+        }));
+      models.push(...providerModels);
+    }
+
+    return models;
+  }
+
+  /**
+   * Get models by provider ID
+   */
+  getModelsByProviderId(providerId: string): ModelConfig[] {
+    const provider = this.providers.get(providerId);
+    if (!provider || provider.auth_status !== 'authenticated') {
+      return [];
+    }
+    return provider.models.filter((m) => m.is_active);
   }
 
   /**
@@ -273,8 +329,8 @@ export class ProviderManager {
     }
 
     try {
-      const headers = this.authManager.getAuthHeaders(providerId);
-      headers['Authorization'] = this.getTestAuthHeader(providerId, apiKey);
+      const headers = await this.authManager.getAuthHeaders(providerId);
+      headers.Authorization = this.getTestAuthHeader(providerId, apiKey);
 
       const response = await fetch(endpoint, {
         method: 'GET',
@@ -321,10 +377,13 @@ export class ProviderManager {
 
     if (existingIndex >= 0) {
       // Update existing usage
-      existing[existingIndex].requests += usage.requests;
-      existing[existingIndex].input_tokens += usage.input_tokens;
-      existing[existingIndex].output_tokens += usage.output_tokens;
-      existing[existingIndex].cost_usd += usage.cost_usd;
+      const existingUsage = existing[existingIndex];
+      if (existingUsage) {
+        existingUsage.requests += usage.requests;
+        existingUsage.input_tokens += usage.input_tokens;
+        existingUsage.output_tokens += usage.output_tokens;
+        existingUsage.cost_usd += usage.cost_usd;
+      }
     } else {
       // Add new usage entry
       existing.push(usage);
@@ -465,9 +524,10 @@ export class ProviderManager {
     if (config.providers) {
       for (const [providerId, providerConfig] of Object.entries(config.providers as any)) {
         const provider = this.providers.get(providerId);
-        if (provider) {
-          provider.is_enabled = providerConfig.is_enabled ?? provider.is_enabled;
-          provider.last_used = providerConfig.last_used;
+        if (provider && typeof providerConfig === 'object' && providerConfig !== null) {
+          const configObj = providerConfig as { is_enabled?: boolean; last_used?: string };
+          provider.is_enabled = configObj.is_enabled ?? provider.is_enabled;
+          provider.last_used = configObj.last_used || (undefined as any);
           this.providers.set(providerId, provider);
         }
       }

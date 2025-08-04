@@ -1,7 +1,7 @@
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent@2x.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white@2x.png';
 import { Button } from '@/components/ui/button';
 import { Minus, Square, X } from 'lucide-react';
-import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
-import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 export function TitleBar() {
   const handleMinimize = () => {

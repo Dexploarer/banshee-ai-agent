@@ -1,9 +1,9 @@
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent@2x.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white@2x.png';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
-import { BarChart3, Bot, MessageSquare, Settings, Zap } from 'lucide-react';
+import { BarChart3, Briefcase, MessageSquare, Settings, Zap } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
-import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
-import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 const navigationItems = [
   {
@@ -13,16 +13,16 @@ const navigationItems = [
     description: 'Analytics & monitoring',
   },
   {
+    title: 'Workspace',
+    href: '/workspace',
+    icon: Briefcase,
+    description: 'Agent builder & tools',
+  },
+  {
     title: 'Chat',
     href: '/chat',
     icon: MessageSquare,
     description: 'AI conversations',
-  },
-  {
-    title: 'Agents',
-    href: '/agents',
-    icon: Bot,
-    description: 'Manage AI agents',
   },
   {
     title: 'MCP',

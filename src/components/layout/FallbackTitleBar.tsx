@@ -4,9 +4,9 @@
  * Used when Tauri APIs are not available
  */
 
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent@2x.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white@2x.png';
 import { MenuBar } from './MenuBar';
-import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
-import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 export function FallbackTitleBar() {
   return (

@@ -13,7 +13,7 @@ export interface EmbeddingResult {
 export interface EmbeddingSearchResult {
   text: string;
   similarity: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface EmbeddingConfig {
@@ -22,7 +22,7 @@ export interface EmbeddingConfig {
 }
 
 export class EmbeddingService {
-  private model: any; // Simplified for compatibility
+  private model: LanguageModel; // Simplified for compatibility
   private modelName: string;
 
   constructor(config: EmbeddingConfig = {}) {
@@ -100,7 +100,7 @@ export class EmbeddingService {
     candidateEmbeddings: Array<{
       embedding: number[];
       text: string;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>,
     topK = 5,
     threshold = 0.7
@@ -156,10 +156,10 @@ export class EmbeddingService {
    */
   async embedDocument(
     text: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     chunkSize = 1000,
     overlap = 200
-  ): Promise<Array<EmbeddingResult & { metadata?: Record<string, any>; chunkIndex: number }>> {
+  ): Promise<Array<EmbeddingResult & { metadata?: Record<string, unknown>; chunkIndex: number }>> {
     const chunks = this.chunkText(text, chunkSize, overlap);
     const embeddings = await this.generateEmbeddings(chunks);
 
@@ -266,7 +266,7 @@ export class SemanticIndex {
     id: string;
     text: string;
     embedding: number[];
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }> = [];
 
   constructor(private embeddingService: EmbeddingService = new EmbeddingService()) {}
@@ -274,7 +274,7 @@ export class SemanticIndex {
   /**
    * Add text to the index
    */
-  async addText(id: string, text: string, metadata?: Record<string, any>): Promise<void> {
+  async addText(id: string, text: string, metadata?: Record<string, unknown>): Promise<void> {
     const result = await this.embeddingService.generateEmbedding(text);
 
     this.embeddings.push({
@@ -289,7 +289,7 @@ export class SemanticIndex {
    * Add multiple texts to the index
    */
   async addTexts(
-    items: Array<{ id: string; text: string; metadata?: Record<string, any> }>
+    items: Array<{ id: string; text: string; metadata?: Record<string, unknown> }>
   ): Promise<void> {
     const texts = items.map((item) => item.text);
     const results = await this.embeddingService.generateEmbeddings(texts);
@@ -315,7 +315,7 @@ export class SemanticIndex {
     topK = 5,
     threshold = 0.7
   ): Promise<
-    Array<{ id: string; text: string; similarity: number; metadata?: Record<string, any> }>
+    Array<{ id: string; text: string; similarity: number; metadata?: Record<string, unknown> }>
   > {
     const queryResult = await this.embeddingService.generateEmbedding(query);
 
@@ -369,7 +369,7 @@ export class SemanticIndex {
     id: string;
     text: string;
     embedding: number[];
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
   }> {
     return [...this.embeddings];
   }
@@ -382,7 +382,7 @@ export class SemanticIndex {
       id: string;
       text: string;
       embedding: number[];
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>
   ): void {
     this.embeddings = [...data];

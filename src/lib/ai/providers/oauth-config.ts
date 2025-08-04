@@ -20,6 +20,8 @@ export interface OAuthProviderConfig {
  * Note: Only Google and OpenRouter have proper OAuth support for API access
  */
 export const OAUTH_CONFIGS: Record<string, OAuthProviderConfig> = {
+  // Google OAuth configuration
+  // Note: In production, you need to register your app at https://console.cloud.google.com/
   google: {
     authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -28,34 +30,26 @@ export const OAUTH_CONFIGS: Record<string, OAuthProviderConfig> = {
       'https://www.googleapis.com/auth/cloud-platform',
     ],
     responseType: 'code',
+    clientId: 'demo-google-client-id', // Replace with actual Google OAuth client ID
     additionalParams: {
       access_type: 'offline', // Request refresh token
       prompt: 'consent', // Always show consent screen to get refresh token
     },
   },
 
+  // OpenRouter OAuth configuration
+  // Note: Register your app at https://openrouter.ai/
   openrouter: {
     authorizationUrl: 'https://openrouter.ai/api/v1/auth/authorize',
     tokenUrl: 'https://openrouter.ai/api/v1/auth/token',
     scopes: ['read'],
     usePKCE: true, // OpenRouter supports PKCE for enhanced security
     responseType: 'code',
+    clientId: 'demo-openrouter-client-id', // Replace with actual OpenRouter client ID
   },
 
-  // Anthropic OAuth for Claude Pro/Max subscription access
-  // Uses Claude Code client ID for subscription-based authentication
-  anthropic: {
-    authorizationUrl: 'https://console.anthropic.com/oauth/authorize',
-    tokenUrl: 'https://console.anthropic.com/oauth/token',
-    scopes: ['read', 'write'],
-    usePKCE: true, // Enhanced security for subscription flow
-    responseType: 'code',
-    clientId: '9d1c250a-e61b-44d9-88ed-5944d1962f5e', // Claude Code client ID
-    additionalParams: {
-      access_type: 'offline', // Request refresh token for long-term access
-      prompt: 'consent', // Always show consent screen for Pro/Max subscriptions
-    },
-  },
+  // Note: Anthropic doesn't support OAuth - they use API keys only
+  // This configuration is kept for potential future use but is not currently active
 };
 
 /**
@@ -69,10 +63,9 @@ export function getOAuthConfig(providerId: string): OAuthProviderConfig | null {
  * Check if a provider supports OAuth for API access
  */
 export function supportsOAuthForAPI(providerId: string): boolean {
-  // Google and OpenRouter support OAuth for API access
-  // Anthropic supports OAuth for Pro/Max subscription access
-  // Others like OpenAI, Meta, and most providers use API keys only
-  return ['google', 'openrouter', 'anthropic'].includes(providerId);
+  // Only Google and OpenRouter actually support OAuth for API access
+  // Anthropic, OpenAI, and most other providers use API keys only
+  return ['google', 'openrouter'].includes(providerId);
 }
 
 /**

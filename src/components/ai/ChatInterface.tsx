@@ -7,10 +7,10 @@ import { sanitizeInput } from '@/lib/validation/schemas';
 import { useAgentStore } from '@/store/agentStore';
 import { Send, StopCircle, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ModelSelectorDropdown } from './ModelSelectorDropdown';
 import { StreamProgress } from './StreamProgress';
 import { StreamingMessage } from './StreamingMessage';
 import { TokenCounter } from './TokenCounter';
-import { ModelSelectorDropdown } from './ModelSelectorDropdown';
 
 interface Message {
   id: string;
@@ -85,7 +85,7 @@ export function ChatInterface({
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, []);
 
   // Auto-resize textarea
   const resizeTextarea = () => {
@@ -266,7 +266,7 @@ export function ChatInterface({
 
         {isStreaming && currentStreamContent && (
           <div className={cn('bg-card/50 border border-border/50 rounded-lg')}>
-            <StreamingMessage role="assistant" content={currentStreamContent} isStreaming={true} />
+            <StreamingMessage content={currentStreamContent} isStreaming={true} />
           </div>
         )}
 

@@ -28,19 +28,19 @@ import type { ModelConfig } from '@/lib/ai/providers/types';
 import { cn } from '@/lib/utils';
 import {
   Brain,
+  Clock,
+  Database,
+  DollarSign,
+  Eye,
+  Filter,
   Headphones,
   MessageSquare,
   Mic,
+  Palette,
   Search,
   Settings,
   Star,
   Zap,
-  Eye,
-  Palette,
-  Database,
-  Filter,
-  Clock,
-  DollarSign,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -96,14 +96,14 @@ export function ModelSelector({
     // Filter by capability
     if (selectedCapability !== 'all') {
       filtered = filtered.filter(
-        (model) => (model.capabilities as any)[selectedCapability] === true
+        (model) => (model.capabilities as Record<string, boolean>)[selectedCapability] === true
       );
     }
 
     // Filter by required capabilities
     if (capabilities && capabilities.length > 0) {
       filtered = filtered.filter((model) =>
-        capabilities.every((cap) => (model.capabilities as any)[cap] === true)
+        capabilities.every((cap) => (model.capabilities as Record<string, boolean>)[cap] === true)
       );
     }
 

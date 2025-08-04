@@ -13,7 +13,7 @@ export function DebugApp() {
       console.log('Tauri is available');
       try {
         // Try to access Tauri APIs
-        const tauri = (window as any).__TAURI__;
+        const tauri = (window as { __TAURI__?: unknown }).__TAURI__;
         console.log('Tauri APIs:', Object.keys(tauri));
       } catch (e) {
         console.error('Error accessing Tauri:', e);
@@ -30,6 +30,7 @@ export function DebugApp() {
       <p className="text-gray-300 mb-8">React is working! Count: {count}</p>
 
       <button
+        type="button"
         onClick={() => setCount(count + 1)}
         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
       >

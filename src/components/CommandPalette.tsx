@@ -4,34 +4,33 @@
  * Quick command execution and navigation
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import {
-  Bot,
-  MessageSquare,
-  Settings,
-  Zap,
-  Home,
-  Search,
-  History,
-  FileText,
-  Plus,
-  Brain,
-  Database,
-  Moon,
-  Sun,
-  Monitor,
-  RefreshCw,
-  Archive,
-  Star,
-  Command,
-  ChevronRight,
-} from 'lucide-react';
-import { useThemeStore } from '@/store/themeStore';
 import { useAgentStore } from '@/store/agentStore';
+import { useThemeStore } from '@/store/themeStore';
+import {
+  Archive,
+  Bot,
+  Brain,
+  ChevronRight,
+  Command,
+  Database,
+  History,
+  Home,
+  MessageSquare,
+  Monitor,
+  Moon,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  Star,
+  Sun,
+  Zap,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface CommandItem {
   id: string;
@@ -53,7 +52,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { theme, setTheme } = useThemeStore();
+  const { setTheme } = useThemeStore();
 
   const commands: CommandItem[] = [
     // Navigation
@@ -284,7 +283,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       if (!acc[cmd.category]) {
         acc[cmd.category] = [];
       }
-      acc[cmd.category].push(cmd);
+      acc[cmd.category]?.push(cmd);
       return acc;
     },
     {} as Record<string, CommandItem[]>
@@ -324,7 +323,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   // Reset selection when search changes
   useEffect(() => {
     setSelectedIndex(0);
-  }, [search]);
+  }, []);
 
   // Focus input when opened
   useEffect(() => {
@@ -367,6 +366,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
                   return (
                     <button
+                      type="button"
                       key={cmd.id}
                       onClick={cmd.action}
                       className={cn(

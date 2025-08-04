@@ -24,30 +24,31 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getProviderManager } from '@/lib/ai/providers/manager';
-import type { AuthMethod } from '@/lib/ai/providers/types';
+import { useToast } from '@/hooks/useToast';
 import { getAuthInstructions } from '@/lib/ai/providers/auth';
+import { getProviderManager } from '@/lib/ai/providers/manager';
 import { supportsOAuthForAPI } from '@/lib/ai/providers/oauth-config';
-import { OAuthButton } from '../ai/OAuthButton';
-import { OAuthStatus } from '../ai/OAuthStatus';
+import type { AuthMethod } from '@/lib/ai/providers/types';
 import { cn } from '@/lib/utils';
 import {
+  AlertCircle,
   CheckCircle,
+  Clock,
   ExternalLink,
   Eye,
   EyeOff,
   Key,
-  Link2,
   Loader2,
   Shield,
-  Users,
-  Zap,
-  AlertCircle,
   Star,
   TrendingUp,
-  Clock,
+  Users,
+  Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { OAuthButton } from '../ai/OAuthButton';
+import { OAuthStatus } from '../ai/OAuthStatus';
+import { AuthInstructionLink } from '../ui/auth-instruction-link';
 
 interface ProviderManagementProps {
   className?: string;
@@ -65,6 +66,7 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
   const [activeTab, setActiveTab] = useState('overview');
 
   const manager = getProviderManager();
+  const { toast } = useToast();
 
   useEffect(() => {
     const refreshProviders = async () => {
@@ -88,6 +90,24 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
     try {
       if (authMethod === 'api_key') {
         await manager.authenticateWithApiKey(selectedProvider, apiKey.trim());
+
+        // Get the updated provider to show available models
+        const updatedProvider = manager.getProvider(selectedProvider);
+        const availableModels = manager.getAvailableModels();
+
+        // Show success message with model count
+        toast({
+          title: `Successfully authenticated with ${selectedProvider}!`,
+          description: `You now have access to ${availableModels.length} models. You can select them in the Model Selector.`,
+        });
+
+        console.log(`✅ Successfully authenticated with ${selectedProvider}!`);
+        console.log(`📊 Now have access to ${availableModels.length} models`);
+
+        if (updatedProvider) {
+          console.log(`🔑 Provider: ${updatedProvider.provider.name}`);
+          console.log(`📋 Available models: ${updatedProvider.models.length}`);
+        }
       } else if (authMethod === 'oauth2') {
         const authUrl = await manager.startOAuthAuthentication(selectedProvider);
         window.open(authUrl, '_blank');
@@ -425,7 +445,9 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {getAuthInstructions(selectedProvider, 'api_key')}
+                      <AuthInstructionLink
+                        instruction={getAuthInstructions(selectedProvider, 'api_key')}
+                      />
                     </p>
                   </div>
                 )}
@@ -440,7 +462,9 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
                       </p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {getAuthInstructions(selectedProvider, 'oauth2')}
+                      <AuthInstructionLink
+                        instruction={getAuthInstructions(selectedProvider, 'oauth2')}
+                      />
                     </p>
                   </div>
                 )}
@@ -473,7 +497,7 @@ export function ProviderManagement({ className }: ProviderManagementProps) {
 }
 
 interface ProviderCardProps {
-  provider: any;
+  provider: Record<string, unknown>;
   onAuthenticate: (providerId: string, method: AuthMethod) => void;
   onRemoveAuth: (providerId: string) => void;
   onToggle: (providerId: string, enabled: boolean) => void;

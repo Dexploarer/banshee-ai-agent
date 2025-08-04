@@ -4,10 +4,10 @@
  * Handles all application keyboard shortcuts
  */
 
+import { useAgentStore } from '@/store/agentStore';
+import { useThemeStore } from '@/store/themeStore';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useThemeStore } from '@/store/themeStore';
-import { useAgentStore } from '@/store/agentStore';
 
 export function useKeyboardShortcuts() {
   const navigate = useNavigate();

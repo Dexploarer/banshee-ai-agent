@@ -20,6 +20,7 @@ import type { ModelConfig } from '@/lib/ai/providers/types';
 import { createAIRuntime } from '@/lib/ai/runtime';
 import { cn } from '@/lib/utils';
 import {
+  AlertCircle,
   Brain,
   Check,
   ChevronDown,
@@ -27,7 +28,6 @@ import {
   Settings,
   Sparkles,
   Zap,
-  AlertCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
-import { useState, useEffect } from 'react';
-import { Navigation } from './Navigation';
-import { EnhancedTitleBar } from './EnhancedTitleBar';
-import { CommandPalette } from '../CommandPalette';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { CommandPalette } from '../CommandPalette';
+import { EnhancedTitleBar } from './EnhancedTitleBar';
+import { Navigation } from './Navigation';
 
 interface LayoutProps {
   children: ReactNode;

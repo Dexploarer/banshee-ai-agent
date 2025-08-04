@@ -4,8 +4,8 @@
  * Tab navigation with content panels
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 interface TabsContextValue {
   value: string | undefined;
@@ -114,7 +114,6 @@ const TabsContent = React.forwardRef<
     <div
       ref={ref}
       role="tabpanel"
-      tabIndex={0}
       className={cn(
         'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         className

@@ -4,13 +4,13 @@
  * Combines window controls with a comprehensive menu system
  */
 
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent@2x.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white@2x.png';
 import { Button } from '@/components/ui/button';
-import { Minus, Square, X, Maximize } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { useState, useEffect } from 'react';
+import { Maximize, Minus, Square, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { MenuBar } from './MenuBar';
-import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
-import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 export function EnhancedTitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);

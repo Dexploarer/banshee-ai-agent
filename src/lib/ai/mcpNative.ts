@@ -11,8 +11,8 @@ import { experimental_createMCPClient } from 'ai';
  * and adds OAuth 2.1 support with RFC 9728 protected resource metadata discovery
  */
 export class NativeMCPIntegration {
-  private mcpClients = new Map<string, any>(); // AI SDK MCP Client instances
-  private mcpTools = new Map<string, Record<string, any>>(); // Tools by server ID
+  private mcpClients = new Map<string, unknown>(); // AI SDK MCP Client instances
+  private mcpTools = new Map<string, Record<string, unknown>>(); // Tools by server ID
   private serverConfigs = new Map<string, MCPServerConfigWithOAuth>(); // Enhanced configs with OAuth
   private isInitialized = false;
   private discovery = getRFC9728Discovery();
@@ -51,8 +51,8 @@ export class NativeMCPIntegration {
       const enhancedConfig = await this.enhanceServerConfig(server);
       this.serverConfigs.set(server.id, enhancedConfig);
 
-      let client;
-      const clientConfig: any = {};
+      let client: unknown;
+      const clientConfig: Record<string, unknown> = {};
 
       switch (server.type) {
         case 'stdio':
@@ -60,7 +60,7 @@ export class NativeMCPIntegration {
             throw new Error('stdio transport requires command');
           }
           clientConfig.transport = {
-            type: 'stdio' as any,
+            type: 'stdio' as string,
             command: server.config.command,
             args: server.config.args || [],
             env: server.config.env || {},
@@ -131,8 +131,8 @@ export class NativeMCPIntegration {
    * Get all tools from all connected MCP servers
    * This returns tools in the format expected by AI SDK
    */
-  getAllTools(): Record<string, any> {
-    const allTools: Record<string, any> = {};
+  getAllTools(): Record<string, unknown> {
+    const allTools: Record<string, unknown> = {};
 
     for (const [serverId, tools] of this.mcpTools) {
       // Prefix tool names with server ID to avoid conflicts
@@ -148,14 +148,14 @@ export class NativeMCPIntegration {
   /**
    * Get tools from a specific server
    */
-  getServerTools(serverId: string): Record<string, any> {
+  getServerTools(serverId: string): Record<string, unknown> {
     return this.mcpTools.get(serverId) || {};
   }
 
   /**
    * Get all connected MCP clients
    */
-  getConnectedClients(): Map<string, any> {
+  getConnectedClients(): Map<string, unknown> {
     return new Map(this.mcpClients);
   }
 
@@ -255,7 +255,7 @@ export class NativeMCPIntegration {
       resource_server: server.config.url || server.config.command || '',
       oauth: {
         enabled: false,
-        ...(server.config as any).oauth,
+        ...(server.config as Record<string, unknown>).oauth,
       },
     };
 
@@ -339,7 +339,7 @@ export class NativeMCPIntegration {
   /**
    * Get stored OAuth token (placeholder)
    */
-  private getStoredToken(_serverId: string): any {
+  private getStoredToken(_serverId: string): unknown {
     // In production, retrieve from secure storage
     // For now, return null to indicate no stored token
     return null;
@@ -348,7 +348,7 @@ export class NativeMCPIntegration {
   /**
    * Check if OAuth token is expired (placeholder)
    */
-  private isTokenExpired(_token: any): boolean {
+  private isTokenExpired(_token: unknown): boolean {
     // In production, check token expiration
     return true;
   }
@@ -363,7 +363,7 @@ export class NativeMCPIntegration {
   /**
    * Update OAuth configuration for a server
    */
-  async updateServerOAuth(serverId: string, oauthConfig: any): Promise<void> {
+  async updateServerOAuth(serverId: string, oauthConfig: Record<string, unknown>): Promise<void> {
     const config = this.serverConfigs.get(serverId);
     if (config) {
       config.oauth = { ...config.oauth, ...oauthConfig };

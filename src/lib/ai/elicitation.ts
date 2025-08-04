@@ -163,7 +163,7 @@ export class ElicitationManager {
   /**
    * Emit elicitation events (can be extended for more sophisticated event handling)
    */
-  private emitElicitationEvent(type: string, data: any): void {
+  private emitElicitationEvent(type: string, data: Record<string, unknown>): void {
     // Dispatch custom event for UI components to listen to
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
@@ -183,8 +183,8 @@ export class ElicitationManager {
     serverId: string,
     toolName: string,
     args: unknown,
-    toolExecutor: (args: unknown) => Promise<any>
-  ): Promise<any> {
+    toolExecutor: (args: unknown) => Promise<Record<string, unknown>>
+  ): Promise<Record<string, unknown>> {
     try {
       // First attempt normal execution
       const result = await toolExecutor(args);
@@ -195,7 +195,7 @@ export class ElicitationManager {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Check if error indicates missing information that could be elicited
       if (this.isElicitableError(error)) {
         const requestId = await this.createElicitationRequest(serverId, {
@@ -220,7 +220,10 @@ export class ElicitationManager {
   /**
    * Handle elicitation prompts from tool results
    */
-  private async handleElicitationPrompts(serverId: string, result: any): Promise<any> {
+  private async handleElicitationPrompts(
+    serverId: string,
+    result: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     const prompts = result._meta.elicitationPrompts;
     const responses: ElicitationResponse[] = [];
 
@@ -251,7 +254,7 @@ export class ElicitationManager {
   /**
    * Check if an error indicates missing information that could be elicited
    */
-  private isElicitableError(error: any): boolean {
+  private isElicitableError(error: unknown): boolean {
     const elicitableMessages = [
       'missing required parameter',
       'insufficient context',

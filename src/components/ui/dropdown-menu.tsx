@@ -4,8 +4,8 @@
  * Context menu with items and groups
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 interface DropdownMenuContextValue {
   open: boolean;
@@ -47,7 +47,7 @@ const DropdownMenuTrigger = React.forwardRef<
   };
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<any>, {
+    return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
       onClick: handleClick,
       'aria-expanded': open,
       'aria-haspopup': true,
@@ -131,6 +131,7 @@ const DropdownMenuItem = React.forwardRef<
     <div
       ref={ref}
       role="menuitem"
+      tabIndex={0}
       className={cn(
         'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors',
         'focus:bg-accent focus:text-accent-foreground',

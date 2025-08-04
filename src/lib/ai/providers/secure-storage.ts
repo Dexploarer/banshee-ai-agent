@@ -51,7 +51,7 @@ async function getStore() {
     try {
       // Only import if in Tauri environment
       const storeModule = await import('@tauri-apps/plugin-store');
-      authStore = new storeModule.Store('auth.dat');
+      authStore = new (storeModule.Store as any)('auth.dat');
     } catch (error) {
       console.warn('Failed to load Tauri store, using fallback:', error);
       authStore = new FallbackStore();
@@ -91,7 +91,7 @@ export async function saveAuthConfig(providerId: string, config: AuthConfig): Pr
 export async function getAuthConfig(providerId: string): Promise<AuthConfig | null> {
   try {
     const store = await getStore();
-    const encryptedConfig = await store.get<AuthConfig>(providerId);
+    const encryptedConfig = (await store.get(providerId)) as AuthConfig | null;
     if (!encryptedConfig) return null;
 
     // Decrypt credentials
@@ -100,7 +100,7 @@ export async function getAuthConfig(providerId: string): Promise<AuthConfig | nu
       credentials: encryptedConfig.credentials
         ? await decryptCredentials(encryptedConfig.credentials)
         : undefined,
-    };
+    } as any;
 
     return config;
   } catch (error) {
@@ -139,7 +139,7 @@ export async function getAllAuthConfigs(): Promise<Record<string, AuthConfig>> {
           credentials: config.credentials
             ? await decryptCredentials(config.credentials)
             : undefined,
-        };
+        } as AuthConfig;
       }
     }
 

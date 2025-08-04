@@ -4,15 +4,15 @@
  * Wraps window API calls in try-catch to prevent white screen
  */
 
+import bansheeLogoTransparent from '@/assets/banshee-logo-transparent@2x.png';
+import bansheeLogoWhite from '@/assets/banshee-logo-white@2x.png';
 import { Button } from '@/components/ui/button';
-import { Minus, Square, X, Maximize } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Maximize, Minus, Square, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { MenuBar } from './MenuBar';
-import bansheeLogoTransparent from '@/assets/banshee-logo-transparent.png';
-import bansheeLogoWhite from '@/assets/banshee-logo-white.png';
 
 // Safely import Tauri window API
-let windowApi: any = null;
+let windowApi: typeof import('@tauri-apps/api/window') | null = null;
 try {
   const tauriWindow = await import('@tauri-apps/api/window');
   windowApi = tauriWindow.getCurrentWindow();
@@ -30,7 +30,7 @@ export function SafeEnhancedTitleBar() {
     windowApi
       .isMaximized()
       .then(setIsMaximized)
-      .catch((err: any) => console.warn('Failed to check maximized state:', err));
+      .catch((err: unknown) => console.warn('Failed to check maximized state:', err));
 
     // Listen for window state changes
     let unlisten: (() => void) | null = null;
@@ -47,7 +47,7 @@ export function SafeEnhancedTitleBar() {
       .then((fn: () => void) => {
         unlisten = fn;
       })
-      .catch((err: any) => console.warn('Failed to listen for resize:', err));
+      .catch((err: unknown) => console.warn('Failed to listen for resize:', err));
 
     return () => {
       if (unlisten) unlisten();

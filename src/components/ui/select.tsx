@@ -4,9 +4,9 @@
  * Dropdown select for choosing from options
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Check, ChevronDown } from 'lucide-react';
+import * as React from 'react';
 
 interface SelectContextValue {
   value: string | undefined;
@@ -102,7 +102,17 @@ const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
 
     return (
       <>
-        <div className="fixed inset-0 z-50" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 z-50"
+          onClick={() => setOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setOpen(false);
+            }
+          }}
+          tabIndex={0}
+          role="button"
+        />
         <div
           ref={ref}
           className={cn(
@@ -110,6 +120,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
             'animate-in fade-in-0 zoom-in-95',
             className
           )}
+          tabIndex={0}
           role="listbox"
           {...props}
         >
@@ -133,6 +144,7 @@ const SelectItem = React.forwardRef<
   return (
     <div
       ref={ref}
+      tabIndex={0}
       role="option"
       aria-selected={isSelected}
       data-value={value}

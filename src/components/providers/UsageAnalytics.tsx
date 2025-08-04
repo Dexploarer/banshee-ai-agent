@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { getProviderManager } from '@/lib/ai/providers/manager';
 import { cn } from '@/lib/utils';
-import { BarChart3, DollarSign, Zap, Calendar } from 'lucide-react';
+import { BarChart3, Calendar, DollarSign, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface UsageAnalyticsProps {
@@ -53,11 +53,11 @@ export function UsageAnalytics({ className }: UsageAnalyticsProps) {
 
   useEffect(() => {
     loadUsageStats();
-  }, [timeRange]);
+  }, []);
 
   const loadUsageStats = () => {
     setLoading(true);
-    const days = parseInt(timeRange);
+    const days = Number.parseInt(timeRange);
     const usage = manager.getTotalUsage(days);
 
     // Calculate statistics
@@ -70,7 +70,7 @@ export function UsageAnalytics({ className }: UsageAnalyticsProps) {
     };
 
     // Group by provider
-    usage.forEach((u) => {
+    for (const u of usage) {
       stats.totalRequests += u.requests;
       stats.totalTokens += u.input_tokens + u.output_tokens;
       stats.totalCost += u.cost_usd;
@@ -88,17 +88,17 @@ export function UsageAnalytics({ className }: UsageAnalyticsProps) {
       stats.byProvider[u.provider_id]!.inputTokens += u.input_tokens;
       stats.byProvider[u.provider_id]!.outputTokens += u.output_tokens;
       stats.byProvider[u.provider_id]!.cost += u.cost_usd;
-    });
+    }
 
     // Group by date for daily usage
     const dailyMap = new Map<string, { requests: number; tokens: number; cost: number }>();
-    usage.forEach((u) => {
+    for (const u of usage) {
       const existing = dailyMap.get(u.date) || { requests: 0, tokens: 0, cost: 0 };
       existing.requests += u.requests;
       existing.tokens += u.input_tokens + u.output_tokens;
       existing.cost += u.cost_usd;
       dailyMap.set(u.date, existing);
-    });
+    }
 
     stats.dailyUsage = Array.from(dailyMap.entries())
       .map(([date, data]) => ({ date, ...data }))

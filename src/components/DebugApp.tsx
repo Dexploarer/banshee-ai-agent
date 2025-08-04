@@ -45,7 +45,12 @@ export function DebugApp() {
         <h2 style={{ fontSize: '18px', marginBottom: '10px' }}>Environment</h2>
         <ul>
           <li>Window: {typeof window !== 'undefined' ? 'Available' : 'Not available'}</li>
-          <li>Tauri: {typeof window.__TAURI__ !== 'undefined' ? 'Available' : 'Not available'}</li>
+          <li>
+            Tauri:{' '}
+            {typeof (window as { __TAURI__?: unknown }).__TAURI__ !== 'undefined'
+              ? 'Available'
+              : 'Not available'}
+          </li>
           <li>Document ready: {document.readyState}</li>
         </ul>
       </div>

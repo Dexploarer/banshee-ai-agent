@@ -19,7 +19,7 @@ function AppSimple() {
           <li>Tailwind CSS: ✓ Working</li>
           <li>
             Tauri:{' '}
-            {typeof window !== 'undefined' && (window as any).__TAURI__
+            {typeof window !== 'undefined' && (window as { __TAURI__?: unknown }).__TAURI__
               ? '✓ Available'
               : '✗ Not available'}
           </li>

@@ -1,10 +1,10 @@
+import { AlertCircle, CheckCircle2, Clock, Crown, RefreshCw } from 'lucide-react';
 import React from 'react';
-import { Badge } from '../ui/badge';
-import { CheckCircle2, AlertCircle, RefreshCw, Crown, Clock } from 'lucide-react';
-import { Button } from '../ui/button';
+import { useToast } from '../../hooks/useToast';
 import { getAuthManager } from '../../lib/ai/providers/auth';
 import { globalRateLimiter } from '../../lib/ai/providers/rate-limiting';
-import { useToast } from '../../hooks/useToast';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 
 interface OAuthStatusProps {
   providerId: string;
@@ -29,17 +29,25 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
       };
     };
   } | null>(null);
-  const [rateLimitStatus, setRateLimitStatus] = React.useState<any>(null);
+  const [rateLimitStatus, setRateLimitStatus] = React.useState<{
+    remaining: number;
+    reset: number;
+    limit: number;
+  } | null>(null);
   const { toast } = useToast();
   const authManager = getAuthManager();
 
   React.useEffect(() => {
     authManager.getAuthConfig(providerId).then((config) => {
       setAuthConfig(config);
-      
+
       // Get rate limit status for subscription users
       if (config?.method === 'oauth2' && config.subscription_info) {
-        const status = globalRateLimiter.getRateLimitStatus(providerId, 'claude-3-5-sonnet-20241022', config);
+        const status = globalRateLimiter.getRateLimitStatus(
+          providerId,
+          'claude-3-5-sonnet-20241022',
+          config
+        );
         setRateLimitStatus(status);
       }
     });
@@ -60,19 +68,27 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
   // Get plan icon and color
   const getPlanIcon = (planType: string) => {
     switch (planType) {
-      case 'pro': return <Crown className="w-3 h-3" />;
-      case 'max_5x': return <Crown className="w-3 h-3" />;
-      case 'max_20x': return <Crown className="w-3 h-3" />;
-      default: return <CheckCircle2 className="w-3 h-3" />;
+      case 'pro':
+        return <Crown className="w-3 h-3" />;
+      case 'max_5x':
+        return <Crown className="w-3 h-3" />;
+      case 'max_20x':
+        return <Crown className="w-3 h-3" />;
+      default:
+        return <CheckCircle2 className="w-3 h-3" />;
     }
   };
 
   const getPlanColor = (planType: string) => {
     switch (planType) {
-      case 'pro': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
-      case 'max_5x': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
-      case 'max_20x': return 'bg-gold-500/10 text-amber-600 dark:text-amber-400';
-      default: return 'bg-green-500/10 text-green-600 dark:text-green-400';
+      case 'pro':
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+      case 'max_5x':
+        return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      case 'max_20x':
+        return 'bg-gold-500/10 text-amber-600 dark:text-amber-400';
+      default:
+        return 'bg-green-500/10 text-green-600 dark:text-green-400';
     }
   };
 
@@ -158,20 +174,18 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
           <Badge
             variant="outline"
             className={`gap-1 text-xs ${
-              rateLimitStatus.status === 'critical' 
-                ? 'border-red-200 text-red-600' 
+              rateLimitStatus.status === 'critical'
+                ? 'border-red-200 text-red-600'
                 : rateLimitStatus.status === 'warning'
-                ? 'border-yellow-200 text-yellow-600'
-                : 'border-green-200 text-green-600'
+                  ? 'border-yellow-200 text-yellow-600'
+                  : 'border-green-200 text-green-600'
             }`}
           >
             <Clock className="w-2 h-2" />
             {Math.round(rateLimitStatus.fiveHour.percentage)}% used
           </Badge>
           {rateLimitStatus.status === 'critical' && (
-            <span className="text-xs text-red-500">
-              Limit approaching
-            </span>
+            <span className="text-xs text-red-500">Limit approaching</span>
           )}
         </div>
       )}

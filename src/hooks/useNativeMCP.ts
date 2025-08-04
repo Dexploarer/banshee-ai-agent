@@ -46,12 +46,12 @@ export function useNativeMCP() {
     };
   }, []);
 
-  // Update stats when servers change
+  // Update stats when ready
   useEffect(() => {
     if (isReady && integrationRef.current) {
       updateStats();
     }
-  }, [connectedServers, isReady]);
+  }, [isReady]);
 
   const updateStats = () => {
     if (integrationRef.current) {

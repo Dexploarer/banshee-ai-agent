@@ -142,7 +142,7 @@ export function ElicitationDialog({ onResponse, className }: ElicitationDialogPr
           <div className="space-y-2">
             {request.options?.map((option, index) => (
               <Button
-                key={index}
+                key={option}
                 variant={value === option ? 'default' : 'outline'}
                 size="sm"
                 className="w-full justify-start"
@@ -154,8 +154,6 @@ export function ElicitationDialog({ onResponse, className }: ElicitationDialogPr
           </div>
         );
 
-      case 'question':
-      case 'input':
       default:
         return (
           <textarea

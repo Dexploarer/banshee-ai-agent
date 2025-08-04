@@ -4,9 +4,9 @@
  * Modal dialog for user interactions
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
+import * as React from 'react';
 
 const Dialog = React.forwardRef<
   HTMLDivElement,
@@ -37,6 +37,13 @@ const Dialog = React.forwardRef<
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            onOpenChange?.(false);
+          }
+        }}
+        tabIndex={0}
+        role="button"
       />
       <div className="relative z-50">{children}</div>
     </div>
@@ -64,6 +71,7 @@ const DialogContent = React.forwardRef<
     {children}
     {onClose && (
       <button
+        type="button"
         onClick={onClose}
         className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
       >

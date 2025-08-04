@@ -37,6 +37,12 @@ use commands::{
 use database::{
     init_database, save_conversation, save_message, get_conversations,
     get_messages, search_conversations, delete_conversation,
+    // Agent memory system
+    simple_commands::{
+        MemoryState, init_agent_memory, save_agent_memory, get_agent_memory,
+        search_agent_memories, save_shared_knowledge, add_knowledge_graph_node, 
+        add_knowledge_graph_edge, backup_agent_memories,
+    },
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -92,6 +98,9 @@ pub fn run() {
     // Initialize MCP process map
     let mcp_processes: Arc<Mutex<HashMap<u32, MCPProcessInfo>>> = Arc::new(Mutex::new(HashMap::new()));
     
+    // Initialize Agent Memory state
+    let memory_state = MemoryState::new();
+    
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
@@ -99,6 +108,7 @@ pub fn run() {
         .manage(ai_state)
         .manage(mcp_processes)
         .manage(secure_session)
+        .manage(memory_state)
         .setup(|_app| {
             // Start cleanup tasks within Tauri's async runtime
             tauri::async_runtime::spawn(async {
@@ -172,6 +182,15 @@ pub fn run() {
             get_messages,
             search_conversations,
             delete_conversation,
+            // Agent Memory System commands
+            init_agent_memory,
+            save_agent_memory,
+            get_agent_memory,
+            search_agent_memories,
+            save_shared_knowledge,
+            add_knowledge_graph_node,
+            add_knowledge_graph_edge,
+            backup_agent_memories,
             // Secure commands
             create_session,
             generate_csrf_token,

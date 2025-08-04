@@ -11,9 +11,9 @@ interface ToolResult {
   success: boolean;
   content: string;
   _meta?: Record<string, unknown> | undefined;
-  linkedResources?: any[];
-  elicitationPrompts?: any[];
-  resourceIndicators?: any[];
+  linkedResources?: unknown[];
+  elicitationPrompts?: unknown[];
+  resourceIndicators?: unknown[];
   timestamp: string;
 }
 
@@ -21,7 +21,7 @@ export function MCPToolDemo() {
   const nativeMCP = useNativeMCP();
   const connectedServers = useMCPStore((state) => state.getConnectedServers());
   const [selectedServer, setSelectedServer] = useState<string>('');
-  const [availableTools, setAvailableTools] = useState<Record<string, any>>({});
+  const [availableTools, setAvailableTools] = useState<Record<string, unknown>>({});
   const [availableResources, setAvailableResources] = useState<MCPResource[]>([]);
   const [selectedTool, setSelectedTool] = useState<string>('');
   const [toolArgs, setToolArgs] = useState<string>('{}');
@@ -52,14 +52,14 @@ export function MCPToolDemo() {
     };
 
     loadData();
-  }, [nativeMCP.isReady, selectedServer]);
+  }, [nativeMCP.isReady, nativeMCP.getAllTools]);
 
   const handleExecuteTool = async () => {
     if (!selectedTool || !nativeMCP.isReady) return;
 
     setIsExecuting(true);
     try {
-      let args: any = {};
+      let args: Record<string, unknown> = {};
       if (toolArgs.trim()) {
         args = JSON.parse(toolArgs);
       }
@@ -138,8 +138,11 @@ export function MCPToolDemo() {
           <CardContent className="space-y-4">
             {/* Server Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Server Filter</label>
+              <label htmlFor="server-filter" className="text-sm font-medium">
+                Server Filter
+              </label>
               <select
+                id="server-filter"
                 value={selectedServer}
                 onChange={(e) => setSelectedServer(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
@@ -155,8 +158,11 @@ export function MCPToolDemo() {
 
             {/* Tool Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Tool</label>
+              <label htmlFor="tool-select" className="text-sm font-medium">
+                Select Tool
+              </label>
               <select
+                id="tool-select"
                 value={selectedTool}
                 onChange={(e) => setSelectedTool(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
@@ -172,8 +178,11 @@ export function MCPToolDemo() {
 
             {/* Tool Arguments */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Arguments (JSON)</label>
+              <label htmlFor="tool-args" className="text-sm font-medium">
+                Arguments (JSON)
+              </label>
               <textarea
+                id="tool-args"
                 value={toolArgs}
                 onChange={(e) => setToolArgs(e.target.value)}
                 placeholder='{"param": "value"}'
@@ -258,8 +267,13 @@ export function MCPToolDemo() {
           <CardContent className="space-y-4">
             {/* Main Content */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Content</label>
-              <div className="p-3 bg-muted rounded-lg font-mono text-sm max-h-40 overflow-auto">
+              <label htmlFor="content-display" className="text-sm font-medium">
+                Content
+              </label>
+              <div
+                id="content-display"
+                className="p-3 bg-muted rounded-lg font-mono text-sm max-h-40 overflow-auto"
+              >
                 {lastResult.content}
               </div>
             </div>
@@ -267,8 +281,13 @@ export function MCPToolDemo() {
             {/* Enhanced Features */}
             {lastResult._meta && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Metadata</label>
-                <div className="p-3 bg-muted rounded-lg font-mono text-xs max-h-32 overflow-auto">
+                <label htmlFor="metadata-display" className="text-sm font-medium">
+                  Metadata
+                </label>
+                <div
+                  id="metadata-display"
+                  className="p-3 bg-muted rounded-lg font-mono text-xs max-h-32 overflow-auto"
+                >
                   {JSON.stringify(lastResult._meta, null, 2)}
                 </div>
               </div>
@@ -277,10 +296,16 @@ export function MCPToolDemo() {
             {/* Resource Links */}
             {lastResult.linkedResources && lastResult.linkedResources.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Linked Resources</label>
-                <div className="space-y-1">
+                <label htmlFor="linked-resources" className="text-sm font-medium">
+                  Linked Resources
+                </label>
+                <div id="linked-resources" className="space-y-1">
                   {lastResult.linkedResources.map((resource, index) => (
-                    <Badge key={index} variant="outline" className="mr-2">
+                    <Badge
+                      key={`${resource.name || resource.uri}-${index}`}
+                      variant="outline"
+                      className="mr-2"
+                    >
                       <Link className="h-3 w-3 mr-1" />
                       {resource.name || resource.uri}
                     </Badge>
@@ -292,11 +317,13 @@ export function MCPToolDemo() {
             {/* Elicitation Prompts */}
             {lastResult.elicitationPrompts && lastResult.elicitationPrompts.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">AI Elicitation Prompts</label>
+                <label htmlFor="elicitation-prompts" className="text-sm font-medium">
+                  AI Elicitation Prompts
+                </label>
                 <div className="space-y-1">
                   {lastResult.elicitationPrompts.map((prompt, index) => (
                     <div
-                      key={index}
+                      key={`prompt-${String(prompt).slice(0, 10)}`}
                       className="p-2 bg-blue-50 rounded border-l-4 border-blue-400 text-sm"
                     >
                       {prompt.text || prompt}

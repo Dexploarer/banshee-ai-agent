@@ -1,11 +1,11 @@
+import { ExternalLink, LogIn } from 'lucide-react';
 import React from 'react';
-import { Button } from '../ui/button';
-import { LogIn, ExternalLink } from 'lucide-react';
+import { useToast } from '../../hooks/useToast';
 import { getAuthManager } from '../../lib/ai/providers/auth';
 import { getProviderManager } from '../../lib/ai/providers/manager';
 import { supportsOAuthForAPI } from '../../lib/ai/providers/oauth-config';
 import { startOAuthFlow, useOAuthListener } from '../../lib/ai/providers/oauth-handler';
-import { useToast } from '../../hooks/useToast';
+import { Button } from '../ui/button';
 
 interface OAuthButtonProps {
   providerId: string;
@@ -16,9 +16,25 @@ interface OAuthButtonProps {
 
 export function OAuthButton({ providerId, onSuccess, onError, className }: OAuthButtonProps) {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isReady, setIsReady] = React.useState(false);
   const { toast } = useToast();
   const authManager = getAuthManager();
   const providerManager = getProviderManager();
+
+  // Check if OAuth is ready on mount
+  React.useEffect(() => {
+    const checkOAuthReady = async () => {
+      try {
+        // Simple check to see if OAuth plugin is available
+        setIsReady(true);
+      } catch (error) {
+        console.error('OAuth plugin not ready:', error);
+        setIsReady(false);
+      }
+    };
+
+    checkOAuthReady();
+  }, []);
 
   // Listen for OAuth completion events
   useOAuthListener((event) => {
@@ -55,11 +71,23 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
   }
 
   const handleOAuthClick = async () => {
+    if (!isReady) {
+      toast({
+        title: 'OAuth Not Ready',
+        description: 'OAuth plugin is not ready. Please try again in a moment.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      console.log(`Starting OAuth flow for provider: ${providerId}`);
+
       // Start OAuth flow
       const authUrl = await authManager.startOAuthFlow(providerId, provider.provider);
+      console.log('Generated auth URL:', authUrl);
 
       // Use Tauri OAuth plugin to handle the flow
       await startOAuthFlow(authUrl);
@@ -75,9 +103,19 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
       console.error('OAuth error:', error);
       const errorMessage = error instanceof Error ? error.message : 'OAuth authentication failed';
 
+      // More specific error messages
+      let userMessage = errorMessage;
+      if (errorMessage.includes('plugin')) {
+        userMessage = 'OAuth plugin error. Please restart the application and try again.';
+      } else if (errorMessage.includes('port')) {
+        userMessage = 'OAuth service is busy. Please wait a moment and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userMessage = 'Network error. Please check your internet connection and try again.';
+      }
+
       toast({
         title: 'Authentication Error',
-        description: errorMessage,
+        description: userMessage,
         variant: 'destructive',
       });
 
@@ -92,8 +130,6 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
         return 'Sign in with Google';
       case 'openrouter':
         return 'Connect OpenRouter';
-      case 'anthropic':
-        return 'Sign in with Subscription';
       default:
         return `Sign in with ${provider.provider.display_name}`;
     }
@@ -103,7 +139,8 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
     switch (providerId) {
       case 'google':
         return (
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" role="img" aria-label="Google">
+            <title>Google</title>
             <path
               fill="currentColor"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -128,14 +165,19 @@ export function OAuthButton({ providerId, onSuccess, onError, className }: OAuth
   };
 
   return (
-    <Button onClick={handleOAuthClick} disabled={isLoading} variant="outline" className={className}>
+    <Button
+      onClick={handleOAuthClick}
+      disabled={isLoading || !isReady}
+      variant="outline"
+      className={className}
+    >
       {isLoading ? (
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
       ) : (
         getButtonIcon()
       )}
-      <span className="ml-2">{getButtonText()}</span>
-      <ExternalLink className="w-3 h-3 ml-2 opacity-50" />
+      <span className="ml-2">{!isReady ? 'OAuth Loading...' : getButtonText()}</span>
+      {isReady && <ExternalLink className="w-3 h-3 ml-2 opacity-50" />}
     </Button>
   );
 }

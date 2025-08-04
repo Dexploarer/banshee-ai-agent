@@ -5,27 +5,21 @@
  * JWT, and other modern authentication patterns for AI providers
  */
 
-import type { AuthConfig, AuthMethod, ProviderConfig } from './types';
 import {
-  getOAuthConfig,
-  generateOAuthState,
-  generateCodeVerifier,
   generateCodeChallenge,
-  OAuthError,
-  type OAuthResult,
+  generateCodeVerifier,
+  generateOAuthState,
+  getOAuthConfig,
 } from './oauth-config';
 import {
-  detectSubscriptionPlan,
-  createSubscriptionAuthConfig,
-  type SubscriptionPlan,
-} from './subscription';
-import {
-  saveAuthConfig as saveSecureAuthConfig,
-  getAuthConfig as getSecureAuthConfig,
-  removeAuthConfig as removeSecureAuthConfig,
   getAllAuthConfigs,
+  getAuthConfig as getSecureAuthConfig,
   initializeAuthStore,
+  removeAuthConfig as removeSecureAuthConfig,
+  saveAuthConfig as saveSecureAuthConfig,
 } from './secure-storage';
+import { createSubscriptionAuthConfig, detectSubscriptionPlan } from './subscription';
+import type { AuthConfig, AuthMethod, ProviderConfig } from './types';
 
 export interface AuthFlow {
   id: string;
@@ -104,8 +98,9 @@ export class AuthenticationManager {
 
     // Try loading from secure storage if not in memory
     if (!config) {
-      config = await getSecureAuthConfig(providerId);
-      if (config) {
+      const storedConfig = await getSecureAuthConfig(providerId);
+      if (storedConfig) {
+        config = storedConfig;
         this.authConfigs.set(providerId, config);
       }
     }
@@ -264,7 +259,7 @@ export class AuthenticationManager {
             method: 'oauth2',
             credentials: {
               access_token: tokenResponse.access_token,
-              refresh_token: tokenResponse.refresh_token,
+              ...(tokenResponse.refresh_token && { refresh_token: tokenResponse.refresh_token }),
             },
             expires_at: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
           };
@@ -275,7 +270,7 @@ export class AuthenticationManager {
           method: 'oauth2',
           credentials: {
             access_token: tokenResponse.access_token,
-            refresh_token: tokenResponse.refresh_token,
+            ...(tokenResponse.refresh_token && { refresh_token: tokenResponse.refresh_token }),
           },
           expires_at: Date.now() + (tokenResponse.expires_in || 3600) * 1000,
         };
@@ -407,7 +402,11 @@ export class AuthenticationManager {
   /**
    * Build OAuth authorization URL
    */
-  private async buildOAuthUrl(provider: ProviderConfig, flowId: string, state: string): string {
+  private async buildOAuthUrl(
+    provider: ProviderConfig,
+    flowId: string,
+    state: string
+  ): Promise<string> {
     const oauthConfig = getOAuthConfig(provider.id);
     if (!oauthConfig) {
       throw new Error(`OAuth not configured for provider ${provider.id}`);
@@ -576,9 +575,8 @@ export class AuthenticationManager {
   /**
    * Get authentication status for all providers
    */
-  getAuthStatus(): Record<
-    string,
-    { method: AuthMethod; authenticated: boolean; expires_at?: number }
+  async getAuthStatus(): Promise<
+    Record<string, { method: AuthMethod; authenticated: boolean; expires_at?: number }>
   > {
     const status: Record<
       string,
@@ -588,8 +586,8 @@ export class AuthenticationManager {
     for (const [providerId, config] of this.authConfigs) {
       status[providerId] = {
         method: config.method,
-        authenticated: this.isAuthenticated(providerId),
-        expires_at: config.expires_at,
+        authenticated: await this.isAuthenticated(providerId),
+        ...(config.expires_at && { expires_at: config.expires_at }),
       };
     }
 
@@ -642,8 +640,8 @@ export function getAuthInstructions(providerId: string, authMethod: AuthMethod):
       basic_auth: 'Not supported by OpenAI',
     },
     anthropic: {
-      api_key: 'Get your API key from https://console.anthropic.com',
-      oauth2: 'Sign in with your Claude Pro or Max subscription. Requires active Pro ($20/mo) or Max ($100/$200/mo) plan.',
+      api_key: 'Get your API key from https://console.anthropic.com/settings/keys',
+      oauth2: 'Anthropic does not support OAuth. Use API keys instead.',
       bearer_token: 'Use your Anthropic API key as a bearer token',
       jwt: 'Not supported by Anthropic',
       mtls: 'Contact Anthropic Enterprise support',
@@ -652,7 +650,7 @@ export function getAuthInstructions(providerId: string, authMethod: AuthMethod):
       basic_auth: 'Not supported by Anthropic',
     },
     google: {
-      api_key: 'Get your API key from Google AI Studio or Google Cloud Console',
+      api_key: 'Get your API key from https://aistudio.google.com/app/apikey',
       oauth2: 'Configure OAuth 2.0 in Google Cloud Console',
       managed_identity: 'Use Google Cloud managed identity for GCP services',
       bearer_token: 'Use Google access tokens',
@@ -660,6 +658,77 @@ export function getAuthInstructions(providerId: string, authMethod: AuthMethod):
       mtls: 'Configure mTLS in Google Cloud',
       openid_connect: 'Use Google OpenID Connect',
       basic_auth: 'Not supported by Google AI',
+    },
+    openrouter: {
+      api_key: 'Get your API key from https://openrouter.ai/keys',
+      oauth2: 'Configure OAuth at https://openrouter.ai/docs/oauth',
+      bearer_token: 'Use your OpenRouter API key as a bearer token',
+      jwt: 'Not supported by OpenRouter',
+      mtls: 'Not supported by OpenRouter',
+      openid_connect: 'Not supported by OpenRouter',
+      managed_identity: 'Not supported by OpenRouter',
+      basic_auth: 'Not supported by OpenRouter',
+    },
+    mistral: {
+      api_key: 'Get your API key from https://console.mistral.ai/api-keys',
+      oauth2: 'Not supported by Mistral',
+      bearer_token: 'Use your Mistral API key as a bearer token',
+      jwt: 'Not supported by Mistral',
+      mtls: 'Not supported by Mistral',
+      openid_connect: 'Not supported by Mistral',
+      managed_identity: 'Not supported by Mistral',
+      basic_auth: 'Not supported by Mistral',
+    },
+    cohere: {
+      api_key: 'Get your API key from https://dashboard.cohere.com/api-keys',
+      oauth2: 'Not supported by Cohere',
+      bearer_token: 'Use your Cohere API key as a bearer token',
+      jwt: 'Not supported by Cohere',
+      mtls: 'Not supported by Cohere',
+      openid_connect: 'Not supported by Cohere',
+      managed_identity: 'Not supported by Cohere',
+      basic_auth: 'Not supported by Cohere',
+    },
+    groq: {
+      api_key: 'Get your API key from https://console.groq.com/keys',
+      oauth2: 'Not supported by Groq',
+      bearer_token: 'Use your Groq API key as a bearer token',
+      jwt: 'Not supported by Groq',
+      mtls: 'Not supported by Groq',
+      openid_connect: 'Not supported by Groq',
+      managed_identity: 'Not supported by Groq',
+      basic_auth: 'Not supported by Groq',
+    },
+    perplexity: {
+      api_key: 'Get your API key from https://perplexity.ai/settings/api',
+      oauth2: 'Not supported by Perplexity',
+      bearer_token: 'Use your Perplexity API key as a bearer token',
+      jwt: 'Not supported by Perplexity',
+      mtls: 'Not supported by Perplexity',
+      openid_connect: 'Not supported by Perplexity',
+      managed_identity: 'Not supported by Perplexity',
+      basic_auth: 'Not supported by Perplexity',
+    },
+    deepseek: {
+      api_key: 'Get your API key from https://platform.deepseek.com/api_keys',
+      oauth2: 'Not supported by DeepSeek',
+      bearer_token: 'Use your DeepSeek API key as a bearer token',
+      jwt: 'Not supported by DeepSeek',
+      mtls: 'Not supported by DeepSeek',
+      openid_connect: 'Not supported by DeepSeek',
+      managed_identity: 'Not supported by DeepSeek',
+      basic_auth: 'Not supported by DeepSeek',
+    },
+    meta: {
+      api_key:
+        'Meta models are available through cloud providers like AWS Bedrock, Azure, or Replicate',
+      oauth2: 'Not directly supported - use cloud provider authentication',
+      bearer_token: 'Use cloud provider tokens',
+      jwt: 'Use cloud provider JWT',
+      mtls: 'Configure through cloud provider',
+      openid_connect: 'Use cloud provider OpenID Connect',
+      managed_identity: 'Use cloud provider managed identity',
+      basic_auth: 'Not supported',
     },
   };
 

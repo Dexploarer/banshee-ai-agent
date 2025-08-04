@@ -65,7 +65,7 @@ export class Agent {
   async chat(message: string): Promise<string> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.generateResponse(this.conversation as any);
+    const result = await this.runtime.generateResponse(this.conversation as CoreMessage[]);
 
     this.conversation.push({ role: 'assistant', content: result.text });
 
@@ -75,10 +75,10 @@ export class Agent {
   async chatStream(message: string): Promise<ReadableStream<string>> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.streamResponse(this.conversation as any);
+    const result = await this.runtime.streamResponse(this.conversation as CoreMessage[]);
 
     // Update conversation when streaming finishes
-    result.onFinish.then((r: any) => {
+    result.onFinish.then((r: { text: string }) => {
       this.conversation.push({ role: 'assistant', content: r.text });
     });
 
@@ -106,13 +106,13 @@ export class Agent {
     if (steps && pattern === 'sequential') {
       const tasks = steps.map((step) => ({ prompt: step }));
       const results = await this.runtime.sequential(tasks);
-      return results.map((r: any) => r.text).join('\n\n');
+      return results.map((r: { text: string }) => r.text).join('\n\n');
     }
 
     if (steps && pattern === 'parallel') {
       const tasks = steps.map((step) => ({ prompt: step }));
       const results = await this.runtime.parallel(tasks);
-      return results.map((r: any) => r.text).join('\n\n');
+      return results.map((r: { text: string }) => r.text).join('\n\n');
     }
 
     // Single task execution

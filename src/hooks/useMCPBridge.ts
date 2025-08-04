@@ -19,7 +19,7 @@ export function useMCPBridge() {
       callTool: mcpClientHook.callTool,
       listPrompts: async () => [], // Placeholder for prompts
       getPrompt: async () => '', // Placeholder for prompts
-    } as any;
+    } as Record<string, unknown>;
 
     if (!bridgeRef.current) {
       bridgeRef.current = initializeMCPBridge(mcpClientWrapper);

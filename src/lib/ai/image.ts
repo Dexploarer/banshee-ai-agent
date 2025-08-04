@@ -1,7 +1,7 @@
-import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import { invoke } from '@tauri-apps/api/core';
+import { generateText } from 'ai';
 
 export interface ImageGenerationConfig {
   providerId: string;
@@ -67,10 +67,9 @@ export class ImageService {
     try {
       if (finalConfig.providerId === 'openai') {
         return this.generateWithOpenAI(prompt, finalConfig);
-      } else {
-        // For other providers, use text-to-image via Tauri command
-        return this.generateWithTauri(prompt, finalConfig);
       }
+      // For other providers, use text-to-image via Tauri command
+      return this.generateWithTauri(prompt, finalConfig);
     } catch (error) {
       throw new Error(`Failed to generate image: ${error}`);
     }
@@ -155,13 +154,13 @@ export class ImageService {
    */
   async analyzeImage(
     imageUrl: string,
-    analysisPrompt: string = 'Describe this image in detail, including objects, colors, mood, and overall composition.'
+    analysisPrompt = 'Describe this image in detail, including objects, colors, mood, and overall composition.'
   ): Promise<ImageAnalysisResult> {
     try {
       const model = this.getVisionModel();
 
       const result = await generateText({
-        model: model as any,
+        model: model as LanguageModel,
         messages: [
           {
             role: 'user',
@@ -184,8 +183,9 @@ export class ImageService {
         confidence: analysis.confidence,
         usage: result.usage
           ? {
-              promptTokens: (result.usage as any).promptTokens || 0,
-              completionTokens: (result.usage as any).completionTokens || 0,
+              promptTokens: (result.usage as { promptTokens: number }).promptTokens || 0,
+              completionTokens:
+                (result.usage as { completionTokens: number }).completionTokens || 0,
               totalTokens: result.usage.totalTokens || 0,
             }
           : undefined,

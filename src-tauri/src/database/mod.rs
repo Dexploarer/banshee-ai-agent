@@ -2,6 +2,18 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use anyhow::Result;
 
+// Agent memory system modules
+pub mod memory;
+pub mod schema;
+pub mod simple_memory;
+pub mod embeddings;
+pub mod simple_commands;
+
+// Re-export key types for easier usage
+pub use memory::*;
+pub use simple_memory::SimpleMemoryManager;
+pub use embeddings::{EmbeddingService, TransformerEmbeddingService};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbConversation {
     pub id: String,

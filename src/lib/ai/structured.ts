@@ -224,7 +224,7 @@ IMPORTANT:
     try {
       // For basic implementation, return a generic description
       // In production, this could be enhanced with actual Zod schema parsing
-      return `Follow the TypeScript interface structure. All required fields must be present with correct types.`;
+      return 'Follow the TypeScript interface structure. All required fields must be present with correct types.';
     } catch (error) {
       return 'Follow the provided schema structure exactly.';
     }

@@ -1,6 +1,6 @@
 /**
  * Anthropic Subscription Plan Management
- * 
+ *
  * Handles Claude Pro/Max subscription plan detection, usage limits, and model access
  */
 
@@ -32,7 +32,7 @@ export const ANTHROPIC_SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       fiveHourCodePrompts: 40,
       weeklyHoursSonnet: 80, // 40-80 hours per week
     },
-    modelAccess: ['claude-3-5-sonnet-20241022'], // Sonnet 4 only
+    modelAccess: ['claude-3-5-sonnet-20241022'], // Claude 3.5 Sonnet (Sonnet 4)
   },
   max_5x: {
     type: 'max_5x',
@@ -44,7 +44,7 @@ export const ANTHROPIC_SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       weeklyHoursSonnet: 280, // 140-280 hours per week
       weeklyHoursOpus: 35, // 15-35 hours per week
     },
-    modelAccess: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'], // Sonnet + Opus
+    modelAccess: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'], // Claude 3.5 Sonnet (Sonnet 4) + Claude 3 Opus
   },
   max_20x: {
     type: 'max_20x',
@@ -56,27 +56,30 @@ export const ANTHROPIC_SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       weeklyHoursSonnet: 480, // 240-480 hours per week
       weeklyHoursOpus: 40, // 24-40 hours per week
     },
-    modelAccess: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'], // Sonnet + Opus
+    modelAccess: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'], // Claude 3.5 Sonnet (Sonnet 4) + Claude 3 Opus
   },
 };
 
 /**
  * Detect subscription plan from OAuth token
  */
-export async function detectSubscriptionPlan(accessToken: string): Promise<SubscriptionPlan | null> {
+export async function detectSubscriptionPlan(
+  _accessToken: string
+): Promise<SubscriptionPlan | null> {
   try {
     // In a real implementation, this would make an API call to Anthropic
     // to get the user's subscription information
     // For now, we'll return a default Pro plan
-    
+
     // Example API call (not real endpoint):
     // const response = await fetch('https://api.anthropic.com/v1/account/subscription', {
     //   headers: { Authorization: `Bearer ${accessToken}` }
     // });
-    
+
     // Mock detection - in reality this would parse the API response
     // For demonstration, we'll assume Pro plan
-    return ANTHROPIC_SUBSCRIPTION_PLANS.pro;
+    const proPlan = ANTHROPIC_SUBSCRIPTION_PLANS.pro;
+    return proPlan ?? null;
   } catch (error) {
     console.error('Failed to detect subscription plan:', error);
     return null;
@@ -97,7 +100,6 @@ export function createSubscriptionAuthConfig(
     credentials: {
       access_token: accessToken,
       refresh_token: refreshToken,
-      token_type: 'Bearer',
     },
     expires_at: Date.now() + expiresIn * 1000,
     subscription_info: {
@@ -127,8 +129,8 @@ export function isModelAccessible(modelId: string, authConfig: AuthConfig): bool
 /**
  * Get recommended model for subscription plan
  */
-export function getRecommendedModel(plan: SubscriptionPlan): string {
-  // Always recommend Sonnet as the primary model
+export function getRecommendedModel(_plan: SubscriptionPlan): string {
+  // Always recommend Claude 3.5 Sonnet (Sonnet 4) as the primary model
   return 'claude-3-5-sonnet-20241022';
 }
 
@@ -140,7 +142,7 @@ export function calculateUsagePercentage(
   limit: number
 ): { percentage: number; status: 'safe' | 'warning' | 'critical' } {
   const percentage = (used / limit) * 100;
-  
+
   if (percentage >= 90) return { percentage, status: 'critical' };
   if (percentage >= 75) return { percentage, status: 'warning' };
   return { percentage, status: 'safe' };

@@ -19,8 +19,8 @@ export interface GlobalProviderConfig {
     {
       apiKey?: string;
       baseUrl?: string;
-      config?: Record<string, any>;
-      createModel?: (modelId: string, config?: any) => LanguageModel;
+      config?: Record<string, unknown>;
+      createModel?: (modelId: string, config?: Record<string, unknown>) => LanguageModel;
     }
   >;
 }
@@ -291,9 +291,9 @@ export function getGlobalModel(modelId: string): LanguageModel {
 export function registerProvider(
   providerId: string,
   provider: AIProvider,
-  createModelFunction: (modelId: string, config?: any) => LanguageModel
+  createModelFunction: (modelId: string, config?: Record<string, unknown>) => LanguageModel
 ): void {
-  (providers as any)[providerId] = provider;
+  (providers as Record<string, AIProvider>)[providerId] = provider;
 
   // Store the create function for later use
   if (!globalConfig.providers[providerId]) {
@@ -305,7 +305,7 @@ export function registerProvider(
 /**
  * Add Ollama local provider support
  */
-export function addOllamaProvider(baseUrl: string = 'http://localhost:11434'): void {
+export function addOllamaProvider(baseUrl = 'http://localhost:11434'): void {
   const ollamaProvider: AIProvider = {
     name: 'Ollama',
     models: {

@@ -4,8 +4,8 @@
  * Progress bar for showing completion status
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 const Progress = React.forwardRef<
   HTMLDivElement,
@@ -20,6 +20,7 @@ const Progress = React.forwardRef<
     <div
       ref={ref}
       role="progressbar"
+      tabIndex={0}
       aria-valuemin={0}
       aria-valuemax={max}
       aria-valuenow={value}

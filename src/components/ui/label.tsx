@@ -4,8 +4,8 @@
  * Form field labels with proper accessibility
  */
 
-import * as React from 'react';
 import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 const Label = React.forwardRef<HTMLLabelElement, React.LabelHTMLAttributes<HTMLLabelElement>>(
   ({ className, ...props }, ref) => (
@@ -17,7 +17,9 @@ const Label = React.forwardRef<HTMLLabelElement, React.LabelHTMLAttributes<HTMLL
         className
       )}
       {...props}
-    />
+    >
+      {props.children}
+    </label>
   )
 );
 Label.displayName = 'Label';

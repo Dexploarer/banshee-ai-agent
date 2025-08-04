@@ -138,7 +138,8 @@ export const CORE_PROVIDERS: ProviderConfig[] = [
     id: 'anthropic',
     name: 'anthropic',
     display_name: 'Anthropic',
-    description: 'Claude models optimized for safety and helpfulness. Use API key for Console access or OAuth for Pro/Max subscriptions.',
+    description:
+      'Claude models optimized for safety and helpfulness. Use API key for Console access or OAuth for Pro/Max subscriptions.',
     package_name: '@ai-sdk/anthropic',
     homepage_url: 'https://anthropic.com',
     documentation_url: 'https://ai-sdk.dev/providers/ai-sdk-providers/anthropic',
