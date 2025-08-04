@@ -6,7 +6,7 @@
  * and threat assessment using collective intelligence
  */
 
-import { Issue } from '../agents/coordination-logic';
+import type { Issue } from '../agents/coordination-logic';
 
 export interface SecurityAnalysisResult {
   vulnerabilities: SecurityVulnerability[];

@@ -1,7 +1,7 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryClient, MemoryUtils } from '../client';
 import { MemoryType } from '../types';
-import type { CreateMemoryRequest, SearchMemoriesRequest, AgentMemory } from '../types';
+import type { AgentMemory, CreateMemoryRequest, SearchMemoriesRequest } from '../types';
 
 // Mock the @tauri-apps/api/core module
 vi.mock('@tauri-apps/api/core', () => ({

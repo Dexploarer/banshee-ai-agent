@@ -1,12 +1,12 @@
-import { vi } from 'vitest';
-import type { Mock } from 'vitest';
 import type {
   AgentMemory,
-  MemoryType,
   CreateMemoryRequest,
-  SearchMemoriesRequest,
   MemorySearchResult,
+  MemoryType,
+  SearchMemoriesRequest,
 } from '@/lib/ai/memory/types';
+import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 /**
  * Test utilities for consistent testing patterns across the Banshee platform
@@ -68,7 +68,7 @@ export class TestDataFactory {
   /**
    * Create test search results
    */
-  static createSearchResults(count: number = 3): MemorySearchResult[] {
+  static createSearchResults(count = 3): MemorySearchResult[] {
     return Array.from({ length: count }, (_, index) => ({
       memory: this.createAgentMemory({
         id: `search-result-${index}`,
@@ -215,7 +215,7 @@ export class TestAssertions {
   /**
    * Assert that an array of memories is properly sorted by date
    */
-  static assertSortedByDate(memories: AgentMemory[], ascending: boolean = false): void {
+  static assertSortedByDate(memories: AgentMemory[], ascending = false): void {
     for (let i = 1; i < memories.length; i++) {
       const date1 = new Date(memories[i - 1].created_at);
       const date2 = new Date(memories[i].created_at);
@@ -271,7 +271,7 @@ export class PerformanceTestUtils {
   static async assertExecutionTime<T>(
     fn: () => Promise<T>,
     maxTimeMs: number,
-    description: string = 'Operation'
+    description = 'Operation'
   ): Promise<T> {
     const { result, timeMs } = await this.measureExecutionTime(fn);
 
@@ -286,7 +286,7 @@ export class PerformanceTestUtils {
    */
   static async benchmark<T>(
     fn: () => Promise<T>,
-    iterations: number = 10
+    iterations = 10
   ): Promise<{ averageMs: number; minMs: number; maxMs: number; results: T[] }> {
     const times: number[] = [];
     const results: T[] = [];
@@ -422,7 +422,7 @@ export class TestSetupUtils {
   /**
    * Wait for async operations to complete
    */
-  static async waitForAsync(ms: number = 0): Promise<void> {
+  static async waitForAsync(ms = 0): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -441,7 +441,7 @@ export class IntegrationTestUtils {
    */
   static async testMemoryWorkflow(
     mockInvoke: Mock,
-    agentId: string = 'integration-test-agent'
+    agentId = 'integration-test-agent'
   ): Promise<void> {
     // 1. Initialize agent memory
     mockInvoke.mockResolvedValueOnce(undefined);

@@ -1,17 +1,17 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForAppLoad,
-  navigateToPortal,
-  waitForLoadingComplete,
-  verifyElementText,
-  fillFormField,
-  clickButton,
-  selectOption,
-  waitForToast,
-  waitForApiCall,
-} from './utils/test-helpers';
+import { expect, test } from '@playwright/test';
 import { waitForTauriWindow } from './utils/tauri-helpers';
 import { createTestAgent, createTestConversation } from './utils/test-data';
+import {
+  clickButton,
+  fillFormField,
+  navigateToPortal,
+  selectOption,
+  verifyElementText,
+  waitForApiCall,
+  waitForAppLoad,
+  waitForLoadingComplete,
+  waitForToast,
+} from './utils/test-helpers';
 
 test.describe('Chat Portal E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -344,7 +344,7 @@ test.describe('Chat Portal E2E Tests', () => {
 
     await page.route('**/api/conversations/**', (route) => {
       const url = new URL(route.request().url());
-      const page_num = parseInt(url.searchParams.get('page') ?? '1');
+      const page_num = Number.parseInt(url.searchParams.get('page') ?? '1');
       const pageSize = 10;
       const start = (page_num - 1) * pageSize;
       const end = start + pageSize;

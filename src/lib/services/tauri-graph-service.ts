@@ -6,21 +6,21 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import type { KnowledgeNode, KnowledgeEdge } from '../ai/memory/types';
+import type { KnowledgeEdge, KnowledgeNode } from '../ai/memory/types';
 import type {
-  GraphApiService,
-  CreateNodeRequest,
   CreateEdgeRequest,
-  UpdateNodeRequest,
-  UpdateEdgeRequest,
+  CreateNodeRequest,
+  GraphApiService,
+  GraphCluster,
   GraphQuery,
+  GraphStats,
   GraphView,
   PathResult,
-  GraphStats,
-  GraphCluster,
+  UpdateEdgeRequest,
+  UpdateNodeRequest,
 } from './graph-api-types';
 import { GraphApiValidator } from './graph-api-types';
-import { GraphApiError, GRAPH_ERROR_CODES } from './graph-api-types';
+import { GRAPH_ERROR_CODES, GraphApiError } from './graph-api-types';
 
 export class TauriGraphService implements GraphApiService {
   /**

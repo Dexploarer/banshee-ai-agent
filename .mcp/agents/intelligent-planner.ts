@@ -5,13 +5,13 @@
  */
 
 import type {
-  Issue,
-  ImplementationPlan,
-  PlanPhase,
   Dependency,
+  ImplementationPlan,
+  Issue,
+  PlanPhase,
+  QualityMetrics,
   Risk,
   ValidationStep,
-  QualityMetrics,
 } from './coordination-logic';
 
 export interface PlanningContext {
@@ -406,7 +406,7 @@ export class IntelligentPlanner {
     const totalMinutes = phases.reduce((total, phase) => {
       const match = phase.estimatedDuration.match(/(\d+)-(\d+)/);
       if (match) {
-        const avg = (parseInt(match[1]) + parseInt(match[2])) / 2;
+        const avg = (Number.parseInt(match[1]) + Number.parseInt(match[2])) / 2;
         return total + avg;
       }
       return total + 30; // Default estimate

@@ -1,12 +1,12 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForAppLoad,
-  navigateToPortal,
-  waitForLoadingComplete,
-  verifyElementText,
-  clickButton,
-} from './utils/test-helpers';
+import { expect, test } from '@playwright/test';
 import { waitForTauriWindow } from './utils/tauri-helpers';
+import {
+  clickButton,
+  navigateToPortal,
+  verifyElementText,
+  waitForAppLoad,
+  waitForLoadingComplete,
+} from './utils/test-helpers';
 
 test.describe('Navigation E2E Tests', () => {
   test.beforeEach(async ({ page }) => {

@@ -6,7 +6,7 @@
  * and structural integrity analysis using collective intelligence
  */
 
-import { Issue } from '../agents/coordination-logic';
+import type { Issue } from '../agents/coordination-logic';
 
 export interface ArchitectureAnalysisResult {
   designIssues: DesignIssue[];

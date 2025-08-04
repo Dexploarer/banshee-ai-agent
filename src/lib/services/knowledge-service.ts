@@ -8,8 +8,8 @@
 import { MemoryClient } from '../ai/memory/client';
 import type {
   CreateKnowledgeRequest as ClientKnowledgeRequest,
-  SharedKnowledge,
   KnowledgeType,
+  SharedKnowledge,
 } from '../ai/memory/types';
 import type {
   AuthContext,
@@ -128,7 +128,7 @@ export class KnowledgeService implements IKnowledgeService {
       }
 
       // Check cache first
-      let knowledge = this.knowledgeCache.get(knowledgeId);
+      const knowledge = this.knowledgeCache.get(knowledgeId);
 
       if (!knowledge) {
         // In a full implementation, you'd have a get_knowledge command

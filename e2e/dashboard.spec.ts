@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForAppLoad,
-  navigateToPortal,
-  waitForLoadingComplete,
-  verifyElementText,
-} from './utils/test-helpers';
+import { expect, test } from '@playwright/test';
 import { waitForTauriWindow } from './utils/tauri-helpers';
+import {
+  navigateToPortal,
+  verifyElementText,
+  waitForAppLoad,
+  waitForLoadingComplete,
+} from './utils/test-helpers';
 
 test.describe('Dashboard Portal E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -197,7 +197,7 @@ test.describe('Dashboard Portal E2E Tests', () => {
     });
 
     const healthValue = await systemHealthCard.locator('.text-2xl.font-bold').textContent();
-    const healthPercentage = parseInt(healthValue?.replace('%', '') ?? '0');
+    const healthPercentage = Number.parseInt(healthValue?.replace('%', '') ?? '0');
 
     const statusText = await systemHealthCard
       .locator('.text-xs.text-muted-foreground')
@@ -221,9 +221,9 @@ test.describe('Dashboard Portal E2E Tests', () => {
     // Should show format like "2 servers active" or "0 servers active"
     expect(statusText).toMatch(/\d+ servers? active/);
 
-    const totalCount = parseInt(totalServers ?? '0');
+    const totalCount = Number.parseInt(totalServers ?? '0');
     const activeMatch = statusText?.match(/(\d+) servers? active/);
-    const activeCount = activeMatch ? parseInt(activeMatch[1]) : 0;
+    const activeCount = activeMatch ? Number.parseInt(activeMatch[1]) : 0;
 
     // Active count should not exceed total count
     expect(activeCount).toBeLessThanOrEqual(totalCount);

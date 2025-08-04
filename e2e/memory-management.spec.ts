@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Memory Management E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
@@ -329,7 +329,7 @@ async function createTestMemory(
   page: any,
   content: string,
   tags: string[] = [],
-  memoryType: string = 'Task'
+  memoryType = 'Task'
 ) {
   await page.click('[data-testid="create-memory-button"]');
   await page.waitForSelector('[data-testid="create-memory-dialog"]');

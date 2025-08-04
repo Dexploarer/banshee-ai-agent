@@ -6,7 +6,7 @@
  * and documentation analysis using collective intelligence
  */
 
-import { Issue } from '../agents/coordination-logic';
+import type { Issue } from '../agents/coordination-logic';
 
 export interface QualityAnalysisResult {
   codeQualityIssues: CodeQualityIssue[];

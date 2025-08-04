@@ -5,7 +5,7 @@
  * Ensures type safety between frontend and backend communication
  */
 
-import type { KnowledgeNode, KnowledgeEdge, NodeType, RelationshipType } from '../ai/memory/types';
+import type { KnowledgeEdge, KnowledgeNode, NodeType, RelationshipType } from '../ai/memory/types';
 
 // Request types for graph operations
 export interface CreateNodeRequest {
@@ -201,7 +201,7 @@ export class GraphApiError extends Error {
   public readonly timestamp: string;
   public readonly details?: Record<string, unknown>;
 
-  constructor(message: string, code: string = 'GRAPH_ERROR', details?: Record<string, unknown>) {
+  constructor(message: string, code = 'GRAPH_ERROR', details?: Record<string, unknown>) {
     super(message);
     this.name = 'GraphApiError';
     this.code = code;

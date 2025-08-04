@@ -3,8 +3,8 @@
  * Usage: /verify [files] [--scope=all] [--mode=full-pipeline]
  */
 
-import { verificationCoordinator } from '../agents/coordination-logic';
 import { invoke } from '@tauri-apps/api/core';
+import { verificationCoordinator } from '../agents/coordination-logic';
 
 export interface VerifyCommandOptions {
   files?: string[];

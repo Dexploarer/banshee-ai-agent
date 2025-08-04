@@ -5,10 +5,10 @@
  * Provides unified interface for all authentication needs across the application.
  */
 
-import { AuthenticationManager, getAuthManager } from '../ai/providers/auth';
-import { WalletAuthService, walletAuthService } from '../wallet/auth-service';
+import { type AuthenticationManager, getAuthManager } from '../ai/providers/auth';
 import type { AuthConfig, AuthMethod } from '../ai/providers/types';
-import type { WalletAuth, WalletUser, GoogleOAuthResult } from '../wallet/types';
+import { type WalletAuthService, walletAuthService } from '../wallet/auth-service';
+import type { GoogleOAuthResult, WalletAuth, WalletUser } from '../wallet/types';
 import type {
   AuthContext,
   IAuthService,

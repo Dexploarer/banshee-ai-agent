@@ -5,11 +5,11 @@
  */
 
 import type {
-  Issue,
-  ImplementationPlan,
-  PlanPhase,
-  FixResult,
   FileChange,
+  FixResult,
+  ImplementationPlan,
+  Issue,
+  PlanPhase,
   ValidationResult,
 } from './coordination-logic';
 

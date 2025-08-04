@@ -6,29 +6,29 @@
  */
 
 import { MemoryClient } from '../ai/memory/client';
-import { tauriGraphService } from './tauri-graph-service';
 import type {
-  CreateNodeRequest as ClientNodeRequest,
   CreateEdgeRequest as ClientEdgeRequest,
-  KnowledgeNode,
+  CreateNodeRequest as ClientNodeRequest,
   KnowledgeEdge,
+  KnowledgeNode,
   NodeType,
   RelationshipType,
 } from '../ai/memory/types';
 import type {
-  CreateNodeRequest,
   CreateEdgeRequest,
-  UpdateNodeRequest,
-  UpdateEdgeRequest,
+  CreateNodeRequest,
   GraphQuery as TauriGraphQuery,
+  UpdateEdgeRequest,
+  UpdateNodeRequest,
 } from './graph-api-types';
+import { tauriGraphService } from './tauri-graph-service';
 import type {
   AuthContext,
+  EdgeCreateRequest,
   GraphQuery,
   GraphServiceConfig,
   IGraphService,
   NodeCreateRequest,
-  EdgeCreateRequest,
   ServiceError,
   ServiceErrorCode,
   ServiceResult,
@@ -146,7 +146,7 @@ export class GraphService implements IGraphService {
   async getNode(nodeId: string, context: AuthContext): Promise<ServiceResult<KnowledgeNode>> {
     try {
       // Get node from cache or client
-      let node = this.nodeCache.get(nodeId);
+      const node = this.nodeCache.get(nodeId);
 
       if (!node) {
         // In a full implementation, you'd have a get_node command
@@ -347,7 +347,7 @@ export class GraphService implements IGraphService {
    */
   async getEdge(edgeId: string, context: AuthContext): Promise<ServiceResult<KnowledgeEdge>> {
     try {
-      let edge = this.edgeCache.get(edgeId);
+      const edge = this.edgeCache.get(edgeId);
 
       if (!edge) {
         return this.createErrorResult(ServiceErrorCodes.NOT_FOUND, 'Edge not found');
@@ -1070,7 +1070,7 @@ export class GraphService implements IGraphService {
     const reachableNodes = await this.breadthFirstSearch(startNode, maxDepth);
     reachableNodes.forEach((node) => {
       if (node !== startNode) {
-        distances.set(node, Infinity);
+        distances.set(node, Number.POSITIVE_INFINITY);
         previous.set(node, null);
         unvisited.add(node);
       }
@@ -1079,17 +1079,17 @@ export class GraphService implements IGraphService {
     while (unvisited.size > 0) {
       // Find node with minimum distance
       let currentNode: string | null = null;
-      let minDistance = Infinity;
+      let minDistance = Number.POSITIVE_INFINITY;
 
       for (const node of unvisited) {
-        const distance = distances.get(node) || Infinity;
+        const distance = distances.get(node) || Number.POSITIVE_INFINITY;
         if (distance < minDistance) {
           minDistance = distance;
           currentNode = node;
         }
       }
 
-      if (!currentNode || minDistance === Infinity) break;
+      if (!currentNode || minDistance === Number.POSITIVE_INFINITY) break;
 
       unvisited.delete(currentNode);
 
@@ -1106,7 +1106,7 @@ export class GraphService implements IGraphService {
         const weight = edge?.weight || 1;
         const altDistance = (distances.get(currentNode) || 0) + weight;
 
-        if (altDistance < (distances.get(neighbor) || Infinity)) {
+        if (altDistance < (distances.get(neighbor) || Number.POSITIVE_INFINITY)) {
           distances.set(neighbor, altDistance);
           previous.set(neighbor, currentNode);
         }
@@ -1127,7 +1127,7 @@ export class GraphService implements IGraphService {
         {
           path,
           distance: path.length - 1,
-          weight: distances.get(targetNode) || Infinity,
+          weight: distances.get(targetNode) || Number.POSITIVE_INFINITY,
         },
       ];
     }
@@ -1227,7 +1227,7 @@ export class GraphService implements IGraphService {
 
     for (const node of agentNodes) {
       if (!visited.has(node.id)) {
-        const component = await this.breadthFirstSearch(node.id, Infinity);
+        const component = await this.breadthFirstSearch(node.id, Number.POSITIVE_INFINITY);
         component.forEach((nodeId) => visited.add(nodeId));
         components++;
       }

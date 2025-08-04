@@ -3,9 +3,9 @@
  * Simplified API for OAuth operations
  */
 
-import { tokenManager } from './token-manager';
-import { oauthFlow, type OAuthConfig } from './oauth-flow';
 import type { MCPServerConfigWithOAuth } from '@/lib/oauth/rfc9728';
+import { type OAuthConfig, oauthFlow } from './oauth-flow';
+import { tokenManager } from './token-manager';
 
 /**
  * Get a valid OAuth token for a server

@@ -1,13 +1,13 @@
-import { test, expect } from '@playwright/test';
-import {
-  waitForAppLoad,
-  navigateToPortal,
-  waitForLoadingComplete,
-  verifyElementText,
-  fillFormField,
-  clickButton,
-} from './utils/test-helpers';
+import { expect, test } from '@playwright/test';
 import { waitForTauriWindow } from './utils/tauri-helpers';
+import {
+  clickButton,
+  fillFormField,
+  navigateToPortal,
+  verifyElementText,
+  waitForAppLoad,
+  waitForLoadingComplete,
+} from './utils/test-helpers';
 
 test.describe('Keyboard Shortcuts E2E Tests', () => {
   test.beforeEach(async ({ page }) => {

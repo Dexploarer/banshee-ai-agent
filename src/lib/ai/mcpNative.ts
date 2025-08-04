@@ -1,9 +1,9 @@
+import { type OAuthConfig, oauthFlow } from '@/lib/mcp/oauth/oauth-flow';
+import { tokenManager } from '@/lib/mcp/oauth/token-manager';
 import type { MCPServer } from '@/lib/mcp/types';
 import { type MCPServerConfigWithOAuth, getRFC9728Discovery } from '@/lib/oauth/rfc9728';
 import { useMCPStore } from '@/store/mcpStore';
 import { experimental_createMCPClient } from 'ai';
-import { tokenManager } from '@/lib/mcp/oauth/token-manager';
-import { oauthFlow, type OAuthConfig } from '@/lib/mcp/oauth/oauth-flow';
 
 /**
  * Native AI SDK MCP Integration with OAuth 2.1 and RFC 9728 Support

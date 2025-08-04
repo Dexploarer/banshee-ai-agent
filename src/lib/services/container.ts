@@ -5,20 +5,20 @@
  * Implements singleton pattern with proper disposal for testing.
  */
 
-import { MemoryService } from './memory-service';
-import { KnowledgeService } from './knowledge-service';
-import { GraphService } from './graph-service';
 import { AuthService, getAuthService } from './auth-service';
+import { GraphService } from './graph-service';
+import { KnowledgeService } from './knowledge-service';
+import { MemoryService } from './memory-service';
 import type {
-  ServiceContainer,
-  ServiceDependencies,
-  ServiceFactory,
-  IMemoryService,
-  IKnowledgeService,
-  IGraphService,
   IAuthService,
   IEventBus,
+  IGraphService,
+  IKnowledgeService,
+  IMemoryService,
+  ServiceContainer,
+  ServiceDependencies,
   ServiceEvent,
+  ServiceFactory,
 } from './types';
 
 /**

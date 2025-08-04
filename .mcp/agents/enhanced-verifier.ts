@@ -57,7 +57,7 @@ export class EnhancedVerifier {
     console.log(`🔍 Enhanced Verifier: Analyzing ${files.length} files`);
 
     const allIssues: Issue[] = [];
-    let totalComplexity = 0;
+    const totalComplexity = 0;
 
     // Process files in batches for efficiency
     const batchSize = 5;

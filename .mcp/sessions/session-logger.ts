@@ -4,10 +4,10 @@
  */
 
 import type {
-  VerificationSession,
-  Issue,
-  ImplementationPlan,
   FixResult,
+  ImplementationPlan,
+  Issue,
+  VerificationSession,
 } from '../agents/coordination-logic';
 
 export interface SessionLog {
@@ -426,7 +426,7 @@ export class SessionLogger {
   generateHumanReport(auditTrail: AuditTrail): string {
     const { metrics, timeline, compliance } = auditTrail;
 
-    let report = `
+    const report = `
 🤖 Multi-Agent AI Code Verification Report
 ==========================================
 

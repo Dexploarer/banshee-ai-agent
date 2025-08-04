@@ -1,5 +1,5 @@
-import { expect } from 'vitest';
 import type { AgentMemory, MemorySearchResult } from '@/lib/ai/memory/types';
+import { expect } from 'vitest';
 
 // Custom matchers for testing
 export const customMatchers = {
@@ -103,7 +103,7 @@ export const customMatchers = {
   /**
    * Check if memories are properly sorted by date
    */
-  toBeSortedByDate(received: AgentMemory[], ascending: boolean = false) {
+  toBeSortedByDate(received: AgentMemory[], ascending = false) {
     let pass = true;
 
     for (let i = 1; i < received.length; i++) {

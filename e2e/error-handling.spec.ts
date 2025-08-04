@@ -1,13 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { waitForTauriWindow } from './utils/tauri-helpers';
 import {
-  waitForAppLoad,
-  navigateToPortal,
-  waitForLoadingComplete,
-  verifyElementText,
   clickButton,
+  navigateToPortal,
+  verifyElementText,
+  waitForAppLoad,
+  waitForLoadingComplete,
   waitForToast,
 } from './utils/test-helpers';
-import { waitForTauriWindow } from './utils/tauri-helpers';
 
 test.describe('Error Handling E2E Tests', () => {
   test.beforeEach(async ({ page }) => {

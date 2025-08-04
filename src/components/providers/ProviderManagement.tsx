@@ -27,9 +27,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/useToast';
 import { getAuthInstructions } from '@/lib/ai/providers/auth';
 import { getProviderManager } from '@/lib/ai/providers/manager';
+import type { ProviderInstance } from '@/lib/ai/providers/manager';
 import { supportsOAuthForAPI } from '@/lib/ai/providers/oauth-config';
 import type { AuthMethod } from '@/lib/ai/providers/types';
-import type { ProviderInstance } from '@/lib/ai/providers/manager';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle,

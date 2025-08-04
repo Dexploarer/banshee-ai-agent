@@ -10,8 +10,8 @@ import type {
   AgentMemory,
   CreateMemoryRequest,
   MemorySearchResult,
-  SearchMemoriesRequest,
   MemoryType,
+  SearchMemoriesRequest,
 } from '../ai/memory/types';
 import type {
   AuthContext,

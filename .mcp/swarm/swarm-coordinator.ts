@@ -6,11 +6,14 @@
  * their findings using collective intelligence principles
  */
 
-import { Issue, VerificationResults, QualityMetrics } from '../agents/coordination-logic';
-import { SecurityVerificationAgent, SecurityAnalysisResult } from './security-agent';
-import { PerformanceVerificationAgent, PerformanceAnalysisResult } from './performance-agent';
-import { ArchitectureVerificationAgent, ArchitectureAnalysisResult } from './architecture-agent';
-import { QualityVerificationAgent, QualityAnalysisResult } from './quality-agent';
+import type { Issue, QualityMetrics, VerificationResults } from '../agents/coordination-logic';
+import {
+  type ArchitectureAnalysisResult,
+  ArchitectureVerificationAgent,
+} from './architecture-agent';
+import { type PerformanceAnalysisResult, PerformanceVerificationAgent } from './performance-agent';
+import { type QualityAnalysisResult, QualityVerificationAgent } from './quality-agent';
+import { type SecurityAnalysisResult, SecurityVerificationAgent } from './security-agent';
 
 export interface SwarmAnalysisResult {
   timestamp: string;
