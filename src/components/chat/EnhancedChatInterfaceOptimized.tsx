@@ -9,17 +9,17 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { DbAgent, DbArtifact } from '@/lib/database';
-import { getAgents, getMessages, saveMessage } from '@/lib/database';
+import { getAgents, getMessages } from '@/lib/database';
 import { cn } from '@/lib/utils';
 import { sanitizeInput } from '@/lib/validation/schemas';
 import { useAgentStore } from '@/store/agentStore';
 import { VirtualMessageList } from '@/components/ui/VirtualList';
-import { usePerformanceMonitor, useComponentPerformance } from '@/hooks/usePerformanceMonitor';
+import { useComponentPerformance } from '@/hooks/usePerformanceMonitor';
 import { apiCache } from '@/lib/cache';
-import { Bot, Code, FileText, Paperclip, Send, Sparkles, StopCircle, User } from 'lucide-react';
+import { Bot, FileText, Paperclip, Send, StopCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArtifactManager } from '../artifacts/ArtifactManager';
-import { MessageRenderer } from './MessageRenderer';
+
 
 interface Message {
   id: string;
@@ -49,18 +49,18 @@ export function EnhancedChatInterfaceOptimized({
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamContent, setCurrentStreamContent] = useState('');
-  const [showArtifacts, setShowArtifacts] = useState(false);
+  const [showArtifacts] = useState(false);
   const [availableAgents, setAvailableAgents] = useState<DbAgent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState(agentId);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Performance monitoring
-  const { measureRender, measureScroll } = usePerformanceMonitor();
+  // const { measureRender } = usePerformanceMonitor();
   const { measureRender: measureComponentRender } = useComponentPerformance('EnhancedChatInterfaceOptimized');
 
   const selectedAgent = useAgentStore((state) => {
@@ -90,18 +90,10 @@ export function EnhancedChatInterfaceOptimized({
     try {
       // Try to get from cache first
       const cacheKey = 'available-agents';
-      const cached = apiCache.get(cacheKey);
-      
-      if (cached) {
-        setAvailableAgents(cached);
-        return;
-      }
-
-      const agents = await getAgents();
+      const agents = await apiCache.get(cacheKey, async () => {
+        return await getAgents();
+      });
       setAvailableAgents(agents);
-      
-      // Cache the result
-      apiCache.set(cacheKey, agents, 5 * 60 * 1000); // 5 minutes TTL
     } catch (error) {
       console.error('Failed to load agents:', error);
     }
@@ -113,26 +105,18 @@ export function EnhancedChatInterfaceOptimized({
     try {
       // Try to get from cache first
       const cacheKey = `messages:${conversationId}`;
-      const cached = apiCache.get(cacheKey);
-      
-      if (cached) {
-        setMessages(cached);
-        return;
-      }
-
-      const dbMessages = await getMessages(conversationId);
-      const formattedMessages: Message[] = dbMessages.map((msg) => ({
-        id: msg.id,
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: msg.content,
-        timestamp: new Date(msg.timestamp),
-        tokens: msg.tokens,
-      }));
+      const formattedMessages = await apiCache.get(cacheKey, async () => {
+        const dbMessages = await getMessages(conversationId);
+        return dbMessages.map((msg) => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          tokens: msg.tokens,
+        }));
+      });
       
       setMessages(formattedMessages);
-      
-      // Cache the result
-      apiCache.set(cacheKey, formattedMessages, 10 * 60 * 1000); // 10 minutes TTL
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
@@ -178,7 +162,7 @@ export function EnhancedChatInterfaceOptimized({
 
     // Clear cache for this conversation
     if (conversationId) {
-      apiCache.delete(`messages:${conversationId}`);
+      apiCache.invalidate(`messages:${conversationId}`);
     }
 
     try {
@@ -204,7 +188,7 @@ export function EnhancedChatInterfaceOptimized({
 
     try {
       // Simulate streaming response
-      const mockResponse = generateMockResponse(userInput, selectedAgent);
+      const mockResponse = generateMockResponse(userInput, selectedAgent as unknown as DbAgent | null);
       const words = mockResponse.split(' ');
       
       for (let i = 0; i < words.length; i++) {
@@ -227,7 +211,7 @@ export function EnhancedChatInterfaceOptimized({
 
       // Clear cache for this conversation
       if (conversationId) {
-        apiCache.delete(`messages:${conversationId}`);
+        apiCache.invalidate(`messages:${conversationId}`);
       }
 
       onConversationUpdate?.();
@@ -247,7 +231,7 @@ export function EnhancedChatInterfaceOptimized({
       `That's an interesting question about "${userInput}". Here's what I think...`,
       `Regarding "${userInput}", I can provide some insights on this topic.`,
     ];
-    return responses[Math.floor(Math.random() * responses.length)];
+    return responses[Math.floor(Math.random() * responses.length)] || '';
   };
 
   const handleStopGeneration = () => {
@@ -287,7 +271,7 @@ export function EnhancedChatInterfaceOptimized({
     role: msg.role,
     content: msg.content,
     timestamp: msg.timestamp,
-    tokens: msg.tokens,
+    tokens: msg.tokens || 0,
   }));
 
   // Add streaming message if active
@@ -297,6 +281,7 @@ export function EnhancedChatInterfaceOptimized({
       role: 'assistant' as const,
       content: currentStreamContent,
       timestamp: new Date(),
+      tokens: Math.ceil(currentStreamContent.length / 4),
     });
   }
 
@@ -305,7 +290,7 @@ export function EnhancedChatInterfaceOptimized({
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Agent Selection */}
         <div className="p-4 border-b border-gray-200">
-          <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+          <Select value={selectedAgentId || ''} onValueChange={(value: string) => setSelectedAgentId(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select an agent" />
             </SelectTrigger>
@@ -344,7 +329,7 @@ export function EnhancedChatInterfaceOptimized({
                   className="flex items-center gap-1 bg-gray-100 rounded px-2 py-1 text-sm"
                 >
                   <FileText className="h-3 w-3" />
-                  <span className="truncate max-w-20">{file.name}</span>
+                  <span className="truncate max-w-20">{file.name || 'Unknown file'}</span>
                   <button
                     onClick={() => removeAttachment(index)}
                     className="text-red-500 hover:text-red-700"

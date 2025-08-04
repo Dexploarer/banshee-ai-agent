@@ -262,6 +262,11 @@ impl NeuralEmbeddingService {
         }
     }
 
+    /// Get the configuration
+    pub fn config(&self) -> &EmbeddingConfig {
+        &self.config
+    }
+
     // Private helper methods
 
     /// Convert text to neural network input features

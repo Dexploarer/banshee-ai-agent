@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface VirtualListProps<T> {
@@ -83,6 +83,13 @@ export function VirtualList<T>({
     };
   }, []);
 
+  // Memoized item component for better performance
+  const MemoizedItem = memo(({ item, index, style }: { item: any; index: number; style: React.CSSProperties }) => (
+    <div style={style}>
+      {renderItem(item, index)}
+    </div>
+  ));
+
   // Generate visible items with optimized rendering
   const visibleItems = useMemo(() => {
     const items: React.ReactNode[] = [];
@@ -93,8 +100,10 @@ export function VirtualList<T>({
         const key = keyExtractor ? keyExtractor(item, i) : i.toString();
         
         items.push(
-          <div
+          <MemoizedItem
             key={key}
+            item={item}
+            index={i}
             style={{
               height: itemHeight,
               position: 'absolute',
@@ -103,9 +112,7 @@ export function VirtualList<T>({
               right: 0,
               willChange: 'transform', // Optimize for animations
             }}
-          >
-            {renderItem(item, i)}
-          </div>
+          />
         );
       }
     }

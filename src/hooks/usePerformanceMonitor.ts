@@ -34,6 +34,10 @@ export function usePerformanceMonitor(
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
   
+  // Limit stored metrics to prevent memory leaks
+  const MAX_METRICS_STORED = 100;
+  const MAX_ALERTS_STORED = 50;
+  
   const defaultThresholds: PerformanceThresholds = {
     cacheHitRate: 0.8, // 80% hit rate
     memoryUsage: 50 * 1024 * 1024, // 50MB
@@ -130,37 +134,52 @@ export function usePerformanceMonitor(
     monitoringIntervalRef.current = setInterval(() => {
       const { cacheHitRate, memoryUsage } = collectCacheMetrics();
       
-      setMetrics(prev => [...prev, {
-        cacheHitRate,
-        memoryUsage,
-        renderTime: 0,
-        scrollPerformance: 0,
-        apiResponseTime: 0,
-        timestamp: Date.now(),
-      }]);
+      setMetrics(prev => {
+        const newMetrics = [...prev, {
+          cacheHitRate,
+          memoryUsage,
+          renderTime: 0,
+          scrollPerformance: 0,
+          apiResponseTime: 0,
+          timestamp: Date.now(),
+        }];
+        
+        // Limit stored metrics to prevent memory leaks
+        return newMetrics.slice(-MAX_METRICS_STORED);
+      });
       
       // Check cache hit rate threshold
       if (cacheHitRate < finalThresholds.cacheHitRate) {
-        setAlerts(prev => [...prev, {
-          type: 'warning',
-          message: `Cache hit rate ${(cacheHitRate * 100).toFixed(1)}% is below threshold of ${(finalThresholds.cacheHitRate * 100).toFixed(1)}%`,
-          metric: 'cacheHitRate',
-          value: cacheHitRate,
-          threshold: finalThresholds.cacheHitRate,
-          timestamp: Date.now(),
-        }]);
+        setAlerts(prev => {
+          const newAlerts = [...prev, {
+            type: 'warning',
+            message: `Cache hit rate ${(cacheHitRate * 100).toFixed(1)}% is below threshold of ${(finalThresholds.cacheHitRate * 100).toFixed(1)}%`,
+            metric: 'cacheHitRate',
+            value: cacheHitRate,
+            threshold: finalThresholds.cacheHitRate,
+            timestamp: Date.now(),
+          }];
+          
+          // Limit stored alerts to prevent memory leaks
+          return newAlerts.slice(-MAX_ALERTS_STORED);
+        });
       }
       
       // Check memory usage threshold
       if (memoryUsage > finalThresholds.memoryUsage) {
-        setAlerts(prev => [...prev, {
-          type: 'error',
-          message: `Memory usage ${(memoryUsage / 1024 / 1024).toFixed(1)}MB exceeds threshold of ${(finalThresholds.memoryUsage / 1024 / 1024).toFixed(1)}MB`,
-          metric: 'memoryUsage',
-          value: memoryUsage,
-          threshold: finalThresholds.memoryUsage,
-          timestamp: Date.now(),
-        }]);
+        setAlerts(prev => {
+          const newAlerts = [...prev, {
+            type: 'error',
+            message: `Memory usage ${(memoryUsage / 1024 / 1024).toFixed(1)}MB exceeds threshold of ${(finalThresholds.memoryUsage / 1024 / 1024).toFixed(1)}MB`,
+            metric: 'memoryUsage',
+            value: memoryUsage,
+            threshold: finalThresholds.memoryUsage,
+            timestamp: Date.now(),
+          }];
+          
+          // Limit stored alerts to prevent memory leaks
+          return newAlerts.slice(-MAX_ALERTS_STORED);
+        });
       }
     }, 5000); // Collect metrics every 5 seconds
   }, [isMonitoring, collectCacheMetrics, finalThresholds]);
