@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { openai } from '@ai-sdk/openai';
 import { invoke } from '@tauri-apps/api/core';
-import { generateText } from 'ai';
+import { generateText, type LanguageModel } from 'ai';
 
 export interface ImageGenerationConfig {
   providerId: string;
@@ -160,7 +160,7 @@ export class ImageService {
       const model = this.getVisionModel();
 
       const result = await generateText({
-        model: model as LanguageModel,
+        model: model as unknown as LanguageModel,
         messages: [
           {
             role: 'user',
@@ -183,10 +183,10 @@ export class ImageService {
         confidence: analysis.confidence,
         usage: result.usage
           ? {
-              promptTokens: (result.usage as { promptTokens: number }).promptTokens || 0,
+              promptTokens: (result.usage as unknown as { promptTokens: number }).promptTokens || 0,
               completionTokens:
-                (result.usage as { completionTokens: number }).completionTokens || 0,
-              totalTokens: result.usage.totalTokens || 0,
+                (result.usage as unknown as { completionTokens: number }).completionTokens || 0,
+              totalTokens: (result.usage as unknown as { totalTokens: number }).totalTokens || 0,
             }
           : undefined,
       };

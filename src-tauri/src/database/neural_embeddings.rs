@@ -443,6 +443,36 @@ pub struct EmbeddingStats {
     pub specialized_networks: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NeuralEmbeddingResult {
+    pub embedding: Vec<f32>,
+    pub text: String,
+    pub memory_type: Option<String>,
+    pub similarity: Option<f32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NeuralEmbeddingSearchResult {
+    pub text: String,
+    pub similarity: f32,
+    pub memory_type: Option<String>,
+    pub metadata: Option<HashMap<String, String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NeuralEmbeddingRequest {
+    pub text: String,
+    pub memory_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NeuralEmbeddingCandidate {
+    pub text: String,
+    pub embedding: Vec<f32>,
+    pub memory_type: Option<String>,
+    pub metadata: Option<HashMap<String, String>>,
+}
+
 // Utility functions
 pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     if a.len() != b.len() {

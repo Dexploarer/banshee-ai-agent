@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod memory_integration_tests {
-    use super::memory::*;
-    use super::simple_memory::SimpleMemoryManager;
-    use super::super::validation::MemoryValidator;
+    use crate::database::memory::*;
+    use crate::database::simple_memory::SimpleMemoryManager;
+    use crate::validation::MemoryValidator;
     use std::collections::HashMap;
     use tempfile::TempDir;
     use serial_test::serial;

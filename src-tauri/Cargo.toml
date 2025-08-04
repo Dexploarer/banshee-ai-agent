@@ -57,6 +57,8 @@ webbrowser = "1.0"
 thiserror = "1.0"
 # Simplified embedding approach - will use basic similarity functions instead of full transformer models for now
 hex = "0.4"
+# Async trait support for embedding migration
+async-trait = "0.1"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.27", features = ["signal", "process"] }

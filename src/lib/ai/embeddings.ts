@@ -1,5 +1,4 @@
-import { openai } from '@ai-sdk/openai';
-import { cosineSimilarity, embed, embedMany } from 'ai';
+import { invoke } from '@tauri-apps/api/core';
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -19,24 +18,46 @@ export interface EmbeddingSearchResult {
 export interface EmbeddingConfig {
   model?: 'text-embedding-3-small' | 'text-embedding-3-large' | 'text-embedding-ada-002';
   dimensions?: number; // For text-embedding-3 models
+  // Neural system configuration
+  embeddingDim?: number;
+  maxTextLength?: number;
+  learningRate?: number;
+  trainingEpochs?: number;
+  cacheSizeLimit?: number;
 }
 
+/**
+ * Neural embedding service that uses the Rust backend's neural networks
+ * This replaces the old OpenAI-based EmbeddingService with a more sophisticated
+ * neural network approach that can handle different memory types
+ */
 export class EmbeddingService {
-  private model: LanguageModel; // Simplified for compatibility
+  private initialized = false;
   private modelName: string;
 
   constructor(config: EmbeddingConfig = {}) {
-    this.modelName = config.model || 'text-embedding-3-small';
+    this.modelName = config.model || 'neural-embedding-v1';
+  }
 
-    if (
-      config.dimensions &&
-      (this.modelName === 'text-embedding-3-small' || this.modelName === 'text-embedding-3-large')
-    ) {
-      this.model = openai.embedding(this.modelName, {
-        dimensions: config.dimensions,
+  /**
+   * Initialize the neural embedding service
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      await invoke('init_neural_embedding_service', {
+        config: {
+          embeddingDim: 256,
+          maxTextLength: 512,
+          learningRate: 0.001,
+          trainingEpochs: 100,
+          cacheSizeLimit: 10000,
+        },
       });
-    } else {
-      this.model = openai.embedding(this.modelName);
+      this.initialized = true;
+    } catch (error) {
+      throw new Error(`Failed to initialize neural embedding service: ${error}`);
     }
   }
 
@@ -44,17 +65,25 @@ export class EmbeddingService {
    * Generate embedding for a single text
    */
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
+    await this.ensureInitialized();
+
     try {
-      const { embedding, usage } = await embed({
-        model: this.model,
-        value: text,
+      const result = await invoke<{
+        embedding: number[];
+        text: string;
+        memoryType?: string;
+      }>('generate_neural_embedding', {
+        text,
+        memoryType: null, // Use general network
       });
 
       return {
-        embedding,
-        text,
+        embedding: result.embedding,
+        text: result.text,
         model: this.modelName,
-        ...(usage && { usage: { tokens: usage.tokens } }),
+        usage: {
+          tokens: text.length / 4, // Approximate token count
+        },
       };
     } catch (error) {
       throw new Error(`Failed to generate embedding: ${error}`);
@@ -65,21 +94,26 @@ export class EmbeddingService {
    * Generate embeddings for multiple texts
    */
   async generateEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+    await this.ensureInitialized();
+
     try {
-      const { embeddings, usage } = await embedMany({
-        model: this.model,
-        values: texts,
+      const textData = texts.map(text => ({ text, memoryType: null }));
+      const results = await invoke<Array<{
+        embedding: number[];
+        text: string;
+        memoryType?: string;
+      }>>('generate_neural_embeddings_batch', {
+        texts: textData,
       });
 
-      return texts.map((text, index) => {
-        const embedding = embeddings[index];
-        return {
-          embedding: embedding || [],
-          text,
-          model: this.modelName,
-          ...(usage && { usage: { tokens: Math.ceil(usage.tokens / texts.length) } }),
-        };
-      });
+      return results.map((result, index) => ({
+        embedding: result.embedding || [],
+        text: result.text,
+        model: this.modelName,
+        usage: {
+          tokens: Math.ceil(texts[index].length / 4),
+        },
+      }));
     } catch (error) {
       throw new Error(`Failed to generate embeddings: ${error}`);
     }
@@ -89,11 +123,23 @@ export class EmbeddingService {
    * Calculate cosine similarity between two embeddings
    */
   calculateSimilarity(embedding1: number[], embedding2: number[]): number {
-    return cosineSimilarity(embedding1, embedding2);
+    if (embedding1.length !== embedding2.length) {
+      return 0.0;
+    }
+
+    const dotProduct = embedding1.reduce((sum, val, i) => sum + val * embedding2[i], 0);
+    const norm1 = Math.sqrt(embedding1.reduce((sum, val) => sum + val * val, 0));
+    const norm2 = Math.sqrt(embedding2.reduce((sum, val) => sum + val * val, 0));
+
+    if (norm1 === 0 || norm2 === 0) {
+      return 0;
+    }
+
+    return dotProduct / (norm1 * norm2);
   }
 
   /**
-   * Search for similar embeddings using cosine similarity
+   * Search for similar embeddings using neural networks
    */
   searchSimilar(
     queryEmbedding: number[],
@@ -109,7 +155,7 @@ export class EmbeddingService {
       .map((candidate) => ({
         text: candidate.text,
         similarity: this.calculateSimilarity(queryEmbedding, candidate.embedding),
-        ...(candidate.metadata && { metadata: candidate.metadata }),
+        ...(candidate.metadata && { metadata: candidate.metadata as Record<string, unknown> }),
       }))
       .filter((result) => result.similarity >= threshold)
       .sort((a, b) => b.similarity - a.similarity)

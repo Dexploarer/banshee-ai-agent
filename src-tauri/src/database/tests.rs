@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod memory_tests {
-    use super::memory::*;
+    use crate::database::memory::*;
     use std::collections::HashMap;
     use chrono::Utc;
 
@@ -381,7 +381,7 @@ mod memory_tests {
 
 #[cfg(test)]
 mod validation_comprehensive_tests {
-    use super::super::validation::MemoryValidator;
+    use crate::validation::MemoryValidator;
     use std::collections::HashMap;
 
     #[test]
@@ -728,7 +728,7 @@ mod validation_comprehensive_tests {
 
     #[test]
     fn test_sanitization_functions() {
-        use super::super::validation::{sanitize_string, sanitize_html_content};
+        use crate::validation::{sanitize_string, sanitize_html_content};
         
         // Test string sanitization
         let input = "Hello <script>alert('test')</script> World";

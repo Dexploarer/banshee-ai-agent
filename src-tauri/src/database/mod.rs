@@ -13,6 +13,7 @@ pub mod memory_sequence_models;
 pub mod neural_knowledge_graph;
 pub mod simple_commands;
 pub mod graph_commands;
+pub mod embedding_migration;
 
 // #[cfg(test)]
 // mod tests;
@@ -29,11 +30,13 @@ mod neural_tests;
 // Re-export key types for easier usage
 pub use memory::*;
 pub use simple_memory::SimpleMemoryManager;
-pub use embeddings::{EmbeddingService, TransformerEmbeddingService};
+// Note: Old EmbeddingService and TransformerEmbeddingService have been removed
+// and replaced with NeuralEmbeddingService
 pub use neural_network::{NeuralNetwork, NetworkBuilder, ActivationFunction, TrainingData};
-pub use neural_embeddings::{NeuralEmbeddingService, EmbeddingConfig, EmbeddingStats};
+pub use neural_embeddings::{NeuralEmbeddingService, EmbeddingConfig, EmbeddingStats, NeuralEmbeddingResult, NeuralEmbeddingSearchResult, NeuralEmbeddingRequest, NeuralEmbeddingCandidate};
 pub use memory_sequence_models::{MemorySequenceModel, MemorySequenceAnalyzer, SequenceModelType, MemoryPatternAnalysis, LSTMCell, GRUCell};
 pub use neural_knowledge_graph::{NeuralKnowledgeGraph, NeuralGraphConfig, NeuralGraphStatistics, NeuralRelationshipType};
+pub use embedding_migration::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbConversation {

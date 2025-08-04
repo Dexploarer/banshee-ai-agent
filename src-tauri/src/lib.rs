@@ -50,6 +50,10 @@ use database::{
         search_agent_memories, save_shared_knowledge, add_knowledge_graph_node, 
         add_knowledge_graph_edge, backup_agent_memories, search_shared_knowledge,
         get_knowledge_graph,
+        // Neural embedding commands
+        init_neural_embedding_service, generate_neural_embedding, generate_neural_embeddings_batch,
+        search_neural_similar, find_similar_memories, train_neural_networks,
+        get_neural_embedding_stats, clear_neural_embedding_cache,
     },
     // Knowledge graph system
     graph_commands::{
@@ -221,6 +225,15 @@ pub fn run() {
             backup_agent_memories,
             search_shared_knowledge,
             get_knowledge_graph,
+            // Neural Embedding System commands
+            init_neural_embedding_service,
+            generate_neural_embedding,
+            generate_neural_embeddings_batch,
+            search_neural_similar,
+            find_similar_memories,
+            train_neural_networks,
+            get_neural_embedding_stats,
+            clear_neural_embedding_cache,
             // Enhanced knowledge graph commands
             create_graph_node,
             get_graph_node,

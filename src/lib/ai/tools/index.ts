@@ -276,18 +276,20 @@ const legacyTools: Record<string, any> = {
   } as any,
 
   generateEmbedding: {
-    description: 'Generate embeddings for text using OpenAI models',
+    description: 'Generate semantic embedding for text using neural networks',
     parameters: generateEmbeddingToolSchema,
     execute: async ({ text, model }: GenerateEmbeddingParams) => {
       try {
-        const { EmbeddingService } = await import('../embeddings');
-        const embeddingService = new EmbeddingService({ model });
+        const { NeuralEmbeddingService } = await import('../neural-embeddings');
+        const embeddingService = new NeuralEmbeddingService();
         const result = await embeddingService.generateEmbedding(text);
         return {
           success: true,
           embedding: result.embedding,
-          model: result.model,
-          usage: result.usage,
+          model: 'neural-embedding-v1',
+          usage: {
+            tokens: text.length / 4,
+          },
         };
       } catch (error) {
         return { success: false, error: String(error) };
@@ -296,12 +298,13 @@ const legacyTools: Record<string, any> = {
   } as any,
 
   searchSimilar: {
-    description: 'Find similar texts using semantic embeddings',
+    description: 'Find similar texts using neural semantic embeddings',
     parameters: searchSimilarToolSchema,
     execute: async ({ query, texts, topK, threshold }: SearchSimilarParams) => {
       try {
-        const { findSimilarTexts } = await import('../embeddings');
-        const results = await findSimilarTexts(query, texts, topK, threshold);
+        const { findSimilarTextsNeural } = await import('../neural-embeddings');
+        const textData = texts.map(text => ({ text, memoryType: undefined }));
+        const results = await findSimilarTextsNeural(query, textData, topK, threshold);
         return { success: true, results };
       } catch (error) {
         return { success: false, error: String(error) };
@@ -310,13 +313,14 @@ const legacyTools: Record<string, any> = {
   } as any,
 
   clusterTexts: {
-    description: 'Cluster texts by semantic similarity',
+    description: 'Cluster texts by neural semantic similarity',
     parameters: clusterTextsToolSchema,
     execute: async ({ texts, threshold }: ClusterTextsParams) => {
       try {
-        const { clusterTexts } = await import('../embeddings');
-        const clusters = await clusterTexts(texts, threshold);
-        return { success: true, clusters };
+        const { clusterTextsNeural } = await import('../neural-embeddings');
+        const textData = texts.map(text => ({ text, memoryType: undefined }));
+        const clusters = await clusterTextsNeural(textData, threshold);
+        return { success: true, clusters: clusters.map(cluster => cluster.map(item => item.text)) };
       } catch (error) {
         return { success: false, error: String(error) };
       }

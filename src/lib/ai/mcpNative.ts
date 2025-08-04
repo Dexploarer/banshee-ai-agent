@@ -96,7 +96,7 @@ export class NativeMCPIntegration {
         };
       }
 
-      client = await experimental_createMCPClient(clientConfig);
+      client = await experimental_createMCPClient(clientConfig as unknown as any);
 
       // Store the client
       this.mcpClients.set(server.id, client);
@@ -120,7 +120,7 @@ export class NativeMCPIntegration {
     const client = this.mcpClients.get(serverId);
     if (client) {
       try {
-        await client.close();
+        await (client as { close: () => Promise<void> }).close();
       } catch (error) {
         console.warn(`Error closing MCP client ${serverId}:`, error);
       }
@@ -167,7 +167,7 @@ export class NativeMCPIntegration {
   async refreshAllTools(): Promise<void> {
     for (const [serverId, client] of this.mcpClients) {
       try {
-        const tools = await client.tools();
+        const tools = await (client as { tools: () => Promise<Record<string, unknown>> }).tools();
         this.mcpTools.set(serverId, tools);
       } catch (error) {
         console.warn(`Failed to refresh tools for server ${serverId}:`, error);
@@ -257,7 +257,7 @@ export class NativeMCPIntegration {
       resource_server: server.config.url || server.config.command || '',
       oauth: {
         enabled: false,
-        ...(server.config as Record<string, unknown>).oauth,
+        ...((server.config as Record<string, unknown>).oauth as Record<string, unknown> || {}),
       },
     };
 
@@ -347,9 +347,9 @@ export class NativeMCPIntegration {
     return {
       serverId: config.id,
       clientId: config.oauth.client_id!,
-      clientSecret: config.oauth.client_secret,
-      authorizationEndpoint: config.oauth.metadata.authorization_endpoint,
-      tokenEndpoint: config.oauth.metadata.token_endpoint,
+      clientSecret: config.oauth.client_secret || '',
+      authorizationEndpoint: config.oauth.metadata.authorization_endpoint || '',
+      tokenEndpoint: config.oauth.metadata.token_endpoint || '',
       scopes: config.oauth.scopes || ['read', 'write'],
       usePKCE: true, // Always use PKCE for security
     };
@@ -400,7 +400,12 @@ export class NativeMCPIntegration {
   async updateServerOAuth(serverId: string, oauthConfig: Record<string, unknown>): Promise<void> {
     const config = this.serverConfigs.get(serverId);
     if (config) {
-      config.oauth = { ...config.oauth, ...oauthConfig };
+      config.oauth = { 
+        enabled: false,
+        ...config.oauth, 
+        ...oauthConfig,
+        enabled: (oauthConfig.enabled as boolean) || false
+      } as MCPServerConfigWithOAuth['oauth'];
       this.serverConfigs.set(serverId, config);
 
       // If OAuth is now enabled, try to reconnect

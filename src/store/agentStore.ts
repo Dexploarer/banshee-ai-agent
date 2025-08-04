@@ -2,6 +2,7 @@ import type { Agent } from '@/lib/ai';
 import type { CoreMessage } from 'ai';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apiCache, computationCache } from '@/lib/cache';
 
 export interface Conversation {
   id: string;
@@ -44,6 +45,11 @@ interface AgentState {
   loadConversation: (conversationId: string) => void;
   deleteConversation: (conversationId: string) => void;
 
+  // Cached actions
+  getCachedConversations: (agentId: string) => Conversation[];
+  getCachedSession: (agentId: string) => AgentSession | undefined;
+  invalidateCache: (pattern?: string) => void;
+
   // Getters
   getActiveSession: () => AgentSession | null;
   getSessionByAgent: (agentId: string) => AgentSession | undefined;
@@ -74,6 +80,12 @@ export const useAgentStore = create<AgentState>()(
             },
           },
         }));
+        
+        // Cache the session
+        const session = get().sessions[agentId];
+        if (session) {
+          apiCache.set(`session:${agentId}`, session, 10 * 60 * 1000); // 10 minutes TTL
+        }
       },
 
       selectAgent: (agentId) => {
@@ -97,6 +109,12 @@ export const useAgentStore = create<AgentState>()(
             },
           },
         }));
+        
+        // Update cache
+        const session = get().sessions[agentId];
+        if (session) {
+          apiCache.set(`session:${agentId}`, session, 10 * 60 * 1000);
+        }
       },
 
       removeSession: (agentId) => {
@@ -104,6 +122,9 @@ export const useAgentStore = create<AgentState>()(
           const { [agentId]: removed, ...rest } = state.sessions;
           return { sessions: rest };
         });
+        
+        // Remove from cache
+        apiCache.delete(`session:${agentId}`);
       },
 
       createConversation: (agentId) => {
@@ -119,6 +140,12 @@ export const useAgentStore = create<AgentState>()(
           conversations: [...state.conversations, conversation],
         }));
 
+        // Cache the conversation
+        apiCache.set(`conversation:${conversation.id}`, conversation, 30 * 60 * 1000); // 30 minutes TTL
+        
+        // Invalidate agent conversations cache
+        apiCache.invalidate(`conversations:${agentId}`);
+
         return conversation;
       },
 
@@ -128,6 +155,13 @@ export const useAgentStore = create<AgentState>()(
             conv.id === conversationId ? { ...conv, ...updates, updatedAt: new Date() } : conv
           ),
         }));
+        
+        // Update cache
+        const conversation = get().conversations.find(c => c.id === conversationId);
+        if (conversation) {
+          apiCache.set(`conversation:${conversationId}`, conversation, 30 * 60 * 1000);
+          apiCache.invalidate(`conversations:${conversation.agentId}`);
+        }
       },
 
       addMessage: (conversationId, message) => {
@@ -142,6 +176,13 @@ export const useAgentStore = create<AgentState>()(
               : conv
           ),
         }));
+        
+        // Update cache
+        const conversation = get().conversations.find(c => c.id === conversationId);
+        if (conversation) {
+          apiCache.set(`conversation:${conversationId}`, conversation, 30 * 60 * 1000);
+          apiCache.invalidate(`conversations:${conversation.agentId}`);
+        }
       },
 
       loadConversation: (conversationId) => {
@@ -159,14 +200,61 @@ export const useAgentStore = create<AgentState>()(
               },
               selectedAgentId: conversation.agentId,
             }));
+            
+            // Update session cache
+            const updatedSession = get().sessions[conversation.agentId];
+            if (updatedSession) {
+              apiCache.set(`session:${conversation.agentId}`, updatedSession, 10 * 60 * 1000);
+            }
           }
         }
       },
 
       deleteConversation: (conversationId) => {
+        const conversation = get().conversations.find(c => c.id === conversationId);
+        
         set((state) => ({
           conversations: state.conversations.filter((c) => c.id !== conversationId),
         }));
+        
+        // Remove from cache
+        apiCache.delete(`conversation:${conversationId}`);
+        if (conversation) {
+          apiCache.invalidate(`conversations:${conversation.agentId}`);
+        }
+      },
+
+      // Cached getters
+      getCachedConversations: (agentId) => {
+        const cacheKey = `conversations:${agentId}`;
+        const cached = apiCache.get(cacheKey);
+        
+        if (cached) {
+          return cached;
+        }
+        
+        const conversations = get().conversations.filter((c) => c.agentId === agentId);
+        apiCache.set(cacheKey, conversations, 5 * 60 * 1000); // 5 minutes TTL
+        return conversations;
+      },
+
+      getCachedSession: (agentId) => {
+        const cacheKey = `session:${agentId}`;
+        const cached = apiCache.get(cacheKey);
+        
+        if (cached) {
+          return cached;
+        }
+        
+        const session = get().sessions[agentId];
+        if (session) {
+          apiCache.set(cacheKey, session, 10 * 60 * 1000); // 10 minutes TTL
+        }
+        return session;
+      },
+
+      invalidateCache: (pattern) => {
+        apiCache.invalidate(pattern);
       },
 
       getActiveSession: () => {
@@ -201,6 +289,12 @@ export const useAgentStore = create<AgentState>()(
               },
             };
           });
+          
+          // Update cache
+          const session = get().sessions[selectedAgentId];
+          if (session) {
+            apiCache.set(`session:${selectedAgentId}`, session, 10 * 60 * 1000);
+          }
         }
       },
     }),

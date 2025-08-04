@@ -190,7 +190,8 @@ export class ElicitationManager {
       const result = await toolExecutor(args);
 
       // Check if result contains elicitation requests
-      if (result._meta?.elicitationPrompts?.length > 0) {
+      const meta = result._meta as Record<string, unknown>;
+      if (meta?.elicitationPrompts && Array.isArray(meta.elicitationPrompts) && meta.elicitationPrompts.length > 0) {
         return this.handleElicitationPrompts(serverId, result);
       }
 
@@ -198,11 +199,12 @@ export class ElicitationManager {
     } catch (error: unknown) {
       // Check if error indicates missing information that could be elicited
       if (this.isElicitableError(error)) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         const requestId = await this.createElicitationRequest(serverId, {
           type: 'question',
-          prompt: `Additional information needed: ${error.message}`,
+          prompt: `Additional information needed: ${errorMessage}`,
           required: true,
-          context: { toolName, args, error: error.message },
+          context: { toolName, args, error: errorMessage },
         });
 
         // Return pending status
@@ -224,16 +226,18 @@ export class ElicitationManager {
     serverId: string,
     result: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
-    const prompts = result._meta.elicitationPrompts;
+    const meta = result._meta as Record<string, unknown>;
+    const prompts = meta?.elicitationPrompts as Array<Record<string, unknown>> || [];
     const responses: ElicitationResponse[] = [];
 
     for (const prompt of prompts) {
+      const promptObj = prompt as Record<string, unknown>;
       const requestId = await this.createElicitationRequest(serverId, {
-        type: prompt.type || 'question',
-        prompt: prompt.text || prompt.prompt,
-        options: prompt.options,
-        required: prompt.required ?? true,
-        context: prompt.context,
+        type: ((promptObj.type as string) || 'question') as 'question' | 'choice' | 'confirmation' | 'input',
+        prompt: (promptObj.text as string) || (promptObj.prompt as string) || '',
+        options: promptObj.options as string[] | undefined,
+        required: (promptObj.required as boolean) ?? true,
+        context: promptObj.context as Record<string, unknown> | undefined,
       });
 
       // For now, return pending status - UI will handle the prompts
@@ -263,8 +267,9 @@ export class ElicitationManager {
       'clarification required',
     ];
 
-    const errorMessage = error.message?.toLowerCase() || '';
-    return elicitableMessages.some((msg) => errorMessage.includes(msg));
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const lowerMessage = errorMessage.toLowerCase();
+    return elicitableMessages.some((msg) => lowerMessage.includes(msg));
   }
 
   /**

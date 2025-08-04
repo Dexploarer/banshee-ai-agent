@@ -64,7 +64,7 @@ export type {
   ImageAnalysisResult,
 } from './image';
 
-// Export embedding features
+// Export embedding features (updated to use neural system)
 export {
   EmbeddingService,
   embeddingService,
@@ -78,6 +78,22 @@ export type {
   EmbeddingSearchResult,
   EmbeddingConfig,
 } from './embeddings';
+
+// Export neural embedding features
+export {
+  NeuralEmbeddingService,
+  neuralEmbeddingService,
+  generateNeuralSearchEmbedding,
+  findSimilarTextsNeural,
+  clusterTextsNeural,
+  NeuralSemanticIndex,
+} from './neural-embeddings';
+export type {
+  NeuralEmbeddingResult,
+  NeuralEmbeddingSearchResult,
+  NeuralEmbeddingConfig,
+  NeuralEmbeddingStats,
+} from './neural-embeddings';
 
 // Re-export common AI SDK types for convenience
 export type { CoreMessage, LanguageModel, Tool } from 'ai';
