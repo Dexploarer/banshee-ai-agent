@@ -229,7 +229,7 @@ export function CodeExecutor({ code, language, onOutput, onError, className }: C
           <div className="flex-1">
             <Tabs
               value={activeTab}
-              onValueChange={(v: string) => setActiveTab(v)}
+              onValueChange={(v: string) => setActiveTab(v as 'error' | 'info' | 'output')}
               className="h-full flex flex-col"
             >
               <TabsList className="grid w-full grid-cols-3">

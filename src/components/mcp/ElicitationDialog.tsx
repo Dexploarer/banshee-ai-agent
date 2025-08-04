@@ -140,7 +140,7 @@ export function ElicitationDialog({ onResponse, className }: ElicitationDialogPr
       case 'choice':
         return (
           <div className="space-y-2">
-            {request.options?.map((option, index) => (
+            {request.options?.map((option) => (
               <Button
                 key={option}
                 variant={value === option ? 'default' : 'outline'}

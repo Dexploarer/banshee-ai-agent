@@ -33,6 +33,7 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
     remaining: number;
     reset: number;
     limit: number;
+    status: 'safe' | 'warning' | 'critical' | 'exceeded';
   } | null>(null);
   const { toast } = useToast();
   const authManager = getAuthManager();
@@ -48,7 +49,12 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
           'claude-3-5-sonnet-20241022',
           config
         );
-        setRateLimitStatus(status);
+        setRateLimitStatus({
+          remaining: status.fiveHour.limit - status.fiveHour.used,
+          reset: status.fiveHour.resetTime,
+          limit: status.fiveHour.limit,
+          status: status.status
+        });
       }
     });
   }, [providerId, authManager]);
@@ -182,7 +188,7 @@ export function OAuthStatus({ providerId, onRefresh }: OAuthStatusProps) {
             }`}
           >
             <Clock className="w-2 h-2" />
-            {Math.round(rateLimitStatus.fiveHour.percentage)}% used
+            {Math.round((rateLimitStatus.remaining / rateLimitStatus.limit) * 100)}% used
           </Badge>
           {rateLimitStatus.status === 'critical' && (
             <span className="text-xs text-red-500">Limit approaching</span>

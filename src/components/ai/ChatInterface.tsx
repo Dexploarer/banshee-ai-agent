@@ -266,7 +266,7 @@ export function ChatInterface({
 
         {isStreaming && currentStreamContent && (
           <div className={cn('bg-card/50 border border-border/50 rounded-lg')}>
-            <StreamingMessage content={currentStreamContent} isStreaming={true} />
+            <StreamingMessage content={currentStreamContent} isStreaming={true} role="assistant" />
           </div>
         )}
 

@@ -132,9 +132,9 @@ export function CreateMemoryDialog({
         <div className="space-y-2">
           <Label htmlFor="memory-type">Memory Type</Label>
           <Select
-            value={formData.memory_type}
+            value={formData.memory_type || ''}
             onValueChange={(value: string) =>
-              setFormData((prev) => ({ ...prev, memory_type: value }))
+              setFormData((prev) => ({ ...prev, memory_type: value as MemoryType }))
             }
           >
             {MEMORY_TYPES.map((type) => (

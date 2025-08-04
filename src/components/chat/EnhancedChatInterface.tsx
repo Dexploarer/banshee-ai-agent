@@ -399,6 +399,7 @@ export function EnhancedChatInterface({
                       <MessageRenderer
                         content={currentStreamContent}
                         isStreaming={true}
+                        role="assistant"
                         className="mb-2"
                       />
                     </div>

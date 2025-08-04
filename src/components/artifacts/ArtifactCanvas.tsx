@@ -262,7 +262,7 @@ export function ArtifactCanvas({ artifact, onUpdate, className }: ArtifactCanvas
       <CardContent className="flex-1 flex flex-col min-h-0 p-0">
         <Tabs
           value={activeView}
-          onValueChange={(v: string) => setActiveView(v)}
+          onValueChange={(v: string) => setActiveView(v as 'code' | 'output' | 'preview')}
           className="flex-1 flex flex-col"
         >
           <div className="px-6 border-b">

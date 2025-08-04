@@ -47,7 +47,7 @@ export function MCPToolDemo() {
       try {
         // Load tools from native MCP integration
         const tools = nativeMCP.getAllTools();
-        setAvailableTools(tools);
+        setAvailableTools(tools as Record<string, MCPToolWithExecute>);
 
         // Note: Resources are not directly supported by native AI SDK MCP client
         // This would need to be implemented separately if needed
@@ -307,16 +307,19 @@ export function MCPToolDemo() {
                   Linked Resources
                 </label>
                 <div id="linked-resources" className="space-y-1">
-                  {lastResult.linkedResources.map((resource, index) => (
-                    <Badge
-                      key={`${resource.name || resource.uri || 'unknown'}-${index}`}
-                      variant="outline"
-                      className="mr-2"
-                    >
-                      <Link className="h-3 w-3 mr-1" />
-                      {resource.name || resource.uri || 'Unknown Resource'}
-                    </Badge>
-                  ))}
+                  {lastResult.linkedResources.map((resource, index) => {
+                    const resourceObj = resource as { name?: string; uri?: string };
+                    return (
+                      <Badge
+                        key={`${resourceObj.name || resourceObj.uri || 'unknown'}-${index}`}
+                        variant="outline"
+                        className="mr-2"
+                      >
+                        <Link className="h-3 w-3 mr-1" />
+                        {resourceObj.name || resourceObj.uri || 'Unknown Resource'}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -328,7 +331,7 @@ export function MCPToolDemo() {
                   AI Elicitation Prompts
                 </label>
                 <div className="space-y-1">
-                  {lastResult.elicitationPrompts?.map((prompt, index) => (
+                  {lastResult.elicitationPrompts?.map((prompt) => (
                     <div
                       key={`prompt-${String(prompt).slice(0, 10)}`}
                       className="p-2 bg-blue-50 rounded border-l-4 border-blue-400 text-sm"

@@ -493,7 +493,7 @@ export function KnowledgeBaseManager({
                 <Label>Type</Label>
                 <Select
                   value={newKB.type}
-                  onValueChange={(value: string) => setNewKB((prev) => ({ ...prev, type: value }))}
+                  onValueChange={(value: string) => setNewKB((prev) => ({ ...prev, type: value as 'text' | 'files' | 'web' | 'mixed' }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
