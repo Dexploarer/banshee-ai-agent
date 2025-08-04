@@ -1,15 +1,15 @@
-import React from 'react';
+
 import { MemoryUtils } from '../../lib/ai/memory/client';
-import type { AgentMemory, MemoryType } from '../../lib/ai/memory/types';
+import type { AgentMemory } from '../../lib/ai/memory/types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader } from '../ui/card';
 
 interface MemoryCardProps {
   memory: AgentMemory;
-  onSelect?: (memory: AgentMemory) => void;
-  onEdit?: (memory: AgentMemory) => void;
-  onDelete?: (memory: AgentMemory) => void;
+  onSelect: ((memory: AgentMemory) => void) | undefined;
+  onEdit: ((memory: AgentMemory) => void) | undefined;
+  onDelete: ((memory: AgentMemory) => void) | undefined;
   compact?: boolean;
 }
 

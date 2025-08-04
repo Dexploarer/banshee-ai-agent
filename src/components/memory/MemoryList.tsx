@@ -4,7 +4,6 @@ import { useFilteredMemories, useMemoryStats } from '../../lib/ai/memory/hooks';
 import type {
   AgentMemory,
   MemoryFilter as MemoryFilterType,
-  MemoryType,
 } from '../../lib/ai/memory/types';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -142,7 +141,7 @@ export function MemoryList({
         </div>
 
         {/* Sort */}
-        <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+        <Select value={sortBy} onValueChange={(value: string) => setSortBy(value as SortOption)}>
           <option value="date-desc">Newest First</option>
           <option value="date-asc">Oldest First</option>
           <option value="relevance">Most Relevant</option>

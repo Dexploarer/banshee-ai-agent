@@ -1,4 +1,5 @@
 import { disposeMCPBridge, getMCPBridge, initializeMCPBridge } from '@/lib/ai/mcpBridge';
+import type { MCPClient } from '@/lib/mcp/client';
 import { useEffect, useRef } from 'react';
 import { useMCPClient } from './useMCP';
 
@@ -13,13 +14,18 @@ export function useMCPBridge() {
     // Initialize bridge when MCP client is available
     // Create a minimal MCPClient wrapper from the hook methods
     const mcpClientWrapper = {
+      servers: new Map(),
+      connectServer: async () => {},
+      disconnectServer: async () => {},
       listResources: mcpClientHook.listResources,
       readResource: mcpClientHook.getResource,
       listTools: mcpClientHook.listTools,
       callTool: mcpClientHook.callTool,
-      listPrompts: async () => [], // Placeholder for prompts
-      getPrompt: async () => '', // Placeholder for prompts
-    } as Record<string, unknown>;
+      listPrompts: async () => [],
+      getPrompt: async () => '',
+      getConnectedServers: () => [],
+      getServer: () => undefined,
+    } as unknown as MCPClient;
 
     if (!bridgeRef.current) {
       bridgeRef.current = initializeMCPBridge(mcpClientWrapper);

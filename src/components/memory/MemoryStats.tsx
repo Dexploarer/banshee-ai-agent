@@ -28,7 +28,7 @@ export function MemoryStats({ stats, compact = false }: MemoryStatsProps) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, compact ? 3 : 8);
 
-  const maxCount = Math.max(...Object.values(typeDistribution));
+  // const maxCount = Math.max(...Object.values(typeDistribution));
 
   if (compact) {
     return (
@@ -132,7 +132,7 @@ export function MemoryStats({ stats, compact = false }: MemoryStatsProps) {
           </div>
           {stats.recentLearnings.length > 0 && (
             <div className="text-xs text-muted-foreground">
-              Last: {MemoryUtils.getRelativeTime(stats.recentLearnings[0].created_at)}
+              Last: {stats.recentLearnings[0] ? MemoryUtils.getRelativeTime((stats.recentLearnings[0] as { created_at: string }).created_at) : 'None'}
             </div>
           )}
         </CardContent>

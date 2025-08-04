@@ -96,14 +96,14 @@ export function ModelSelector({
     // Filter by capability
     if (selectedCapability !== 'all') {
       filtered = filtered.filter(
-        (model) => (model.capabilities as Record<string, boolean>)[selectedCapability] === true
+        (model) => (model.capabilities as unknown as Record<string, boolean>)[selectedCapability] === true
       );
     }
 
     // Filter by required capabilities
     if (capabilities && capabilities.length > 0) {
       filtered = filtered.filter((model) =>
-        capabilities.every((cap) => (model.capabilities as Record<string, boolean>)[cap] === true)
+        capabilities.every((cap) => (model.capabilities as unknown as Record<string, boolean>)[cap] === true)
       );
     }
 

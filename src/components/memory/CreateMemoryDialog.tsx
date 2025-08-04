@@ -272,7 +272,7 @@ export function CreateMemoryDialog({
 
   if (trigger) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open || false} onOpenChange={onOpenChange || (() => {})}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
         {dialogContent}
       </Dialog>
@@ -280,7 +280,7 @@ export function CreateMemoryDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open || false} onOpenChange={onOpenChange || (() => {})}>
       {dialogContent}
     </Dialog>
   );

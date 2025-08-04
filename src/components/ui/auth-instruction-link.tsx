@@ -14,7 +14,7 @@ export function AuthInstructionLink({ instruction, className }: AuthInstructionL
 
   return (
     <span className={className}>
-      {parts.map((part, index) => {
+      {parts.map((part) => {
         // Check if this part is a URL
         if (part.match(urlRegex)) {
           return (

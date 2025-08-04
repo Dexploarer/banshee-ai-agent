@@ -14,7 +14,7 @@ export function DebugApp() {
       try {
         // Try to access Tauri APIs
         const tauri = (window as { __TAURI__?: unknown }).__TAURI__;
-        console.log('Tauri APIs:', Object.keys(tauri));
+        console.log('Tauri APIs:', Object.keys(tauri as Record<string, unknown>));
       } catch (e) {
         console.error('Error accessing Tauri:', e);
         setError(`Tauri error: ${e}`);

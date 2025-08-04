@@ -65,7 +65,10 @@ export class Agent {
   async chat(message: string): Promise<string> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.generateResponse(this.conversation as CoreMessage[]);
+    const result = await this.runtime.generateResponse(this.conversation.map(msg => ({
+      role: msg.role === 'tool' ? 'assistant' : msg.role,
+      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    })));
 
     this.conversation.push({ role: 'assistant', content: result.text });
 
@@ -75,7 +78,10 @@ export class Agent {
   async chatStream(message: string): Promise<ReadableStream<string>> {
     this.conversation.push({ role: 'user', content: message });
 
-    const result = await this.runtime.streamResponse(this.conversation as CoreMessage[]);
+    const result = await this.runtime.streamResponse(this.conversation.map(msg => ({
+      role: msg.role === 'tool' ? 'assistant' : msg.role,
+      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    })));
 
     // Update conversation when streaming finishes
     result.onFinish.then((r: { text: string }) => {

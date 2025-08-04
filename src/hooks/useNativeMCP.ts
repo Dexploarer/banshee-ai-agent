@@ -3,7 +3,6 @@ import {
   cleanupNativeMCP,
   initializeNativeMCP,
 } from '@/lib/ai/mcpNative';
-import { useMCPStore } from '@/store/mcpStore';
 import { useEffect, useRef, useState } from 'react';
 
 /**
@@ -18,7 +17,7 @@ export function useNativeMCP() {
     toolsByServer: {} as Record<string, number>,
   });
 
-  const connectedServers = useMCPStore((state) => state.getConnectedServers());
+  // const connectedServers = useMCPStore((state) => state.getConnectedServers());
 
   useEffect(() => {
     const initialize = async () => {

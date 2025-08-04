@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAgentMemory, useMemoryBackup } from '../../lib/ai/memory/hooks';
 import type { AgentMemory, CreateMemoryRequest } from '../../lib/ai/memory/types';
 import { Badge } from '../ui/badge';
@@ -150,7 +150,13 @@ export function MemoryDashboard({ agentId, agentName }: MemoryDashboardProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Memory Details */}
               <div>
-                <MemoryCard memory={selectedMemory} compact={false} />
+                <MemoryCard 
+                  memory={selectedMemory} 
+                  compact={false}
+                  onSelect={handleMemorySelect}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
               </div>
 
               {/* Related Memories */}
