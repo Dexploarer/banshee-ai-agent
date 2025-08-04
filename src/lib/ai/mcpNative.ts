@@ -51,8 +51,8 @@ export class NativeMCPIntegration {
       const enhancedConfig = await this.enhanceServerConfig(server);
       this.serverConfigs.set(server.id, enhancedConfig);
 
-      let client: unknown;
       const clientConfig: Record<string, unknown> = {};
+      const client: unknown = await experimental_createMCPClient(clientConfig);
 
       switch (server.type) {
         case 'stdio':

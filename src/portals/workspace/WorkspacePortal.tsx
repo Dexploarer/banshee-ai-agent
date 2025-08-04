@@ -143,7 +143,7 @@ export function WorkspacePortal() {
             <TabsContent value="build" className="h-full m-0 p-6">
               <div className="h-full overflow-auto">
                 <AgentBuilder
-                  agent={selectedAgent ?? (undefined as any)}
+                  agent={selectedAgent ?? undefined}
                   onSave={handleAgentSave}
                   onCancel={() => {
                     if (agents.length > 0) {
